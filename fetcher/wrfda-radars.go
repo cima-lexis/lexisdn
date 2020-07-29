@@ -1,0 +1,102 @@
+package fetcher
+
+import (
+	"fmt"
+	"io/ioutil"
+	"math"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/cima-lexis/lexisdn/webdrops"
+)
+
+// WrfdaSensors retrieves a set of sensors datasets and save them to files.
+// Datasets downloaded are all wunderground sensors data to assimilate in a
+// WRFDA simulation.
+//
+// Needed dewetra sensor classes are:
+//  * IGROMETRO
+//  * TERMOMETRO
+//  * DIREZIONEVENTO
+//  * ANEMOMETRO
+//  * PLUVIOMETRO
+//  * BAROMETRO
+//
+// Being D the start date and time of WRF simulation, needed dates
+// of observations are at time D-6H, D-3H and D. For each hour this function downloads
+// all observations from 30 minutes before to 30 minutes after. The
+// observation that will be assimilated for each sensors is the one
+// near the exact hour.
+//
+// Observations are saved, under cwd, on directory WRFDA/SENSORS/<DATE>
+// with name <SENSORCLASS>.json
+func WrfdaRadars(sess webdrops.Session, simulStartDate time.Time) error {
+	fetcher := wrfdaRadarsSession{
+		sess: sess,
+	}
+
+	fetchDate := func(date time.Time) {
+		fetcher.fetchRadar(date, "CAPPI2")
+		fetcher.fetchRadar(date, "CAPPI3")
+		fetcher.fetchRadar(date, "CAPPI5")
+
+	}
+
+	fetchDate(simulStartDate)
+	fetchDate(simulStartDate.Add(-3 * time.Hour))
+	fetchDate(simulStartDate.Add(-6 * time.Hour))
+
+	return fetcher.sessError
+}
+
+type wrfdaRadarsSession struct {
+	sessError error
+	sess      webdrops.Session
+	//domain    webdrops.Domain
+}
+
+func (fetcher *wrfdaRadarsSession) fetchRadar(date time.Time, varName string) {
+	if fetcher.sessError != nil {
+		return
+	}
+
+	timeline, err := fetcher.sess.RadarTimeline(date)
+	if err != nil {
+		fetcher.sessError = fmt.Errorf("Error downloading radars timeline: %w", err)
+		return
+	}
+
+	minDiffDate := date.Add(time.Hour * 100)
+	for _, instant := range timeline {
+		if math.Abs(instant.Sub(date).Minutes()) < math.Abs(minDiffDate.Sub(date).Minutes()) {
+			minDiffDate = instant
+		}
+	}
+
+	fmt.Fprintf(os.Stderr, "Downloading radars for %s\n", date.Format("02/01/2006 15"))
+	fileContent, err := fetcher.sess.RadarData(minDiffDate, varName)
+	if err != nil {
+		fetcher.sessError = fmt.Errorf("Error downloading radars: %w", err)
+		return
+	}
+
+	radarFilePath := filepath.Join(
+		"WRFDA/RADARS",
+		date.Format("2006010215"),
+		varName+".nc",
+	)
+
+	err = os.MkdirAll(filepath.Dir(radarFilePath), os.FileMode(0755))
+	if err != nil {
+		fetcher.sessError = fmt.Errorf("Error creating directory `%s`: %w", filepath.Dir(radarFilePath), err)
+		return
+	}
+
+	fmt.Fprintf(os.Stderr, "Saving radars to %s\n", radarFilePath)
+	err = ioutil.WriteFile(radarFilePath, fileContent, os.FileMode(0644))
+	if err != nil {
+		fetcher.sessError = fmt.Errorf("Error saving radars to `%s`: %w", radarFilePath, err)
+	}
+
+}
