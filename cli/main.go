@@ -46,8 +46,11 @@ func checkArguments() {
 	}
 }
 
-func fatal(msgerr string) {
-
+func fatalIfError(err error, msgerr string) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, fmt.Errorf(msgerr, err))
+		os.Exit(1)
+	}
 }
 
 func main() {
@@ -68,29 +71,16 @@ func main() {
 		switch downloadType {
 		case "RISICO":
 			err = fetcher.RisicoSensorsMaps(sess, startDateWRF)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, fmt.Errorf("Error fetching wunderground observations maps for RISICO: %w", err))
-				os.Exit(1)
-			}
+			fatalIfError(err, "Error fetching wunderground observations maps for RISICO: %w")
 		case "CONTINUUM":
 			err = fetcher.ContinuumSensors(sess, startDateWRF, webdrops.ItalyDomain)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, fmt.Errorf("Error fetching wunderground observations for CONTINUUM: %w", err))
-				os.Exit(1)
-			}
+			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
 		case "WRFDA":
 			err = fetcher.WrfdaRadars(sess, startDateWRF)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, fmt.Errorf("Error fetching radar data for WRFDA: %w", err))
-				os.Exit(1)
-			}
+			fatalIfError(err, "Error fetching radar data for WRFDA: %w")
 
 			err = fetcher.WrfdaSensors(sess, startDateWRF, webdrops.ItalyDomain)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, fmt.Errorf("Error fetching wunderground observations for WRFDA: %w", err))
-				os.Exit(1)
-			}
-
+			fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
 		}
 	}
 
