@@ -60,10 +60,7 @@ func main() {
 
 	sess := webdrops.Session{}
 	err := sess.Login()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, fmt.Errorf("Error during login: %w", err))
-		os.Exit(1)
-	}
+	fatalIfError(err, "Error during login: %w")
 
 	startDateWRF, err := time.Parse("2006010215", os.Args[1])
 

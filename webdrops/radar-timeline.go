@@ -25,7 +25,7 @@ func (sess *Session) RadarTimeline(date time.Time) ([]time.Time, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error performing Post: %w", err)
 	}
-
+	fmt.Println(string(body))
 	var timeline []string
 	err = json.Unmarshal(body, &timeline)
 	if err != nil {
