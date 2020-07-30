@@ -11,17 +11,20 @@ import (
 )
 
 // RisicoSensorsMaps retrieves a set of sensors maps and save them to files.
-// Maps downloaded are all wunderground sensors data need for a Risico simulation
+// Downloaded maps contains an interpolation of all wunderground sensors observations
+// needed for a Risico simulation.
 //
 // Needed dewetra sensor classes are:
 //  * IGROMETRO
 //  * TERMOMETRO
 //  * PLUVIOMETRO
 //
-// Being D the start date and time of Continuum simulation, needed
+// Being D the start date and time of Risico simulation, needed
 // observations are all that from time D-72H to D.
+// Maps are generated in step of 12 hours each, so to produce 72 hours of map
+// 6 sets of maps must be created.
 //
-// Observations are saved, under cwd, on directory RISICO/SENSORS/
+// Observations are saved, under cwd, on directory RISICO/SENSORS/<STEP START DATE>
 // with name <SENSORCLASS>.nc
 func RisicoSensorsMaps(sess webdrops.Session, simulStartDate time.Time) error {
 	fetcher := risicoSession{
