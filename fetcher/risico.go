@@ -23,18 +23,23 @@ import (
 //
 // Observations are saved, under cwd, on directory RISICO/SENSORS/
 // with name <SENSORCLASS>.nc
-func RisicoSensorsMaps(sess webdrops.Session, simulStartDate time.Time, domain webdrops.Domain) error {
+func RisicoSensorsMaps(sess webdrops.Session, simulStartDate time.Time) error {
 	fetcher := risicoSession{
-		sess:   sess,
-		domain: domain,
+		sess: sess,
 	}
 
-	from := simulStartDate.Add(-24 * time.Hour)
-	to := simulStartDate
+	for step := 6; step >= 1; step-- {
+		from := simulStartDate.Add(-12 * time.Duration(step) * time.Hour)
+		to := from.Add(12 * time.Hour)
 
-	fetcher.fetchSensorMap("IGROMETRO", from, to)
-	fetcher.fetchSensorMap("TERMOMETRO", from, to)
-	fetcher.fetchSensorMap("PLUVIOMETRO", from, to)
+		fetcher.fetchSensorMap("PLUVIOMETRO", from, to)
+		fetcher.fetchSensorMap("IGROMETRO", from, to)
+		fetcher.fetchSensorMap("TERMOMETRO", from, to)
+
+		if fetcher.sessError != nil {
+			break
+		}
+	}
 
 	return fetcher.sessError
 }
@@ -42,7 +47,6 @@ func RisicoSensorsMaps(sess webdrops.Session, simulStartDate time.Time, domain w
 type risicoSession struct {
 	sessError error
 	sess      webdrops.Session
-	domain    webdrops.Domain
 }
 
 func (fetcher *risicoSession) fetchSensorMap(class string, from, to time.Time) {
@@ -50,15 +54,16 @@ func (fetcher *risicoSession) fetchSensorMap(class string, from, to time.Time) {
 		return
 	}
 
-	fmt.Fprintf(os.Stderr, "Downloading observations for %s from %s to %s\n", class, from.Format("02/01/2006 15"), to.Format("02/01/2006 15"))
-	sensorsMap, err := fetcher.sess.SensorsMap(class, from, to, fetcher.domain)
+	fmt.Fprintf(os.Stderr, "Downloading observations map for %s from %s to %s\n", class, from.Format("02/01/2006 15"), to.Format("02/01/2006 15"))
+	sensorsMap, err := fetcher.sess.SensorsMap(class, from, to)
 	if err != nil {
-		fetcher.sessError = fmt.Errorf("Error fetching sensors map: %w", err)
+		fetcher.sessError = fmt.Errorf("Error fetching observations map: %w", err)
 		return
 	}
 
 	mapFilePath := filepath.Join(
 		"RISICO/SENSORS",
+		from.Format("2006010215"),
 		fmt.Sprintf("%s.nc", class),
 	)
 
@@ -68,10 +73,10 @@ func (fetcher *risicoSession) fetchSensorMap(class string, from, to time.Time) {
 		return
 	}
 
-	fmt.Fprintf(os.Stderr, "Saving observations to %s\n", mapFilePath)
+	fmt.Fprintf(os.Stderr, "Saving observations map to %s\n", mapFilePath)
 	err = ioutil.WriteFile(mapFilePath, sensorsMap, os.FileMode(0644))
 	if err != nil {
-		fetcher.sessError = fmt.Errorf("Error saving sensors data to `%s`: %w", mapFilePath, err)
+		fetcher.sessError = fmt.Errorf("Error saving observations map to `%s`: %w", mapFilePath, err)
 	}
 
 }

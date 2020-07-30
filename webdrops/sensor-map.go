@@ -8,18 +8,17 @@ import (
 )
 
 //lonmin, latmin, lonmax, latmax
-func (sess *Session) SensorsMap(class string, from, to time.Time, domain Domain) ([]byte, error) {
+func (sess *Session) SensorsMap(class string, from, to time.Time) ([]byte, error) {
 	sess.Refresh()
 	fromS := from.Format("200601021504")
 	toS := to.Format("200601021504")
 
 	url := fmt.Sprintf(
-		"%ssensors/map/%s/?from=%s&to=%s&geowin=%.0f,%.0f,%.0f,%.0f",
+		"%ssensors/map/%s/?from=%s&to=%s",
 		config.Config.URL,
 		class,
 		fromS,
 		toS,
-		domain.MinLon, domain.MinLat, domain.MaxLon, domain.MaxLat,
 	)
 	fmt.Println(url)
 	bodyResp, err := sess.DoGet(url)

@@ -20,7 +20,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = fetcher.RisicoSensorsMaps(sess, time.Date(2020, 7, 28, 9, 0, 0, 0, time.Local), webdrops.ItalyDomain)
+	err = fetcher.RisicoSensorsMaps(sess, time.Date(2020, 7, 28, 9, 0, 0, 0, time.Local))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, fmt.Errorf("Error fetching wunderground observations for WRFDA: %w", err))
 		os.Exit(1)
