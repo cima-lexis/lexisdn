@@ -321,7 +321,7 @@ To forecast from 2020-06-10 00:00 upto 2020-06-11 00:00, we'll need these GFS da
 
   
 
-In other words, referring to the variables [specified here](#GFS%20data) we will have to download following GFS URLs:
+In other words, referring to the variables [specified here](#GFS-data) we will have to download following GFS URLs:
 
 1) **ds_date** = 20200609, **ds_hour** = 18 ,**fileno** 0
 
@@ -354,7 +354,7 @@ WRFDA can assimilate the following variables from wunderground stations:
 
 ```<Dewetra sensor class> -> <variable name>```
 
-As explained [in the relative chapter](#Registry%20download) to download a set of observations we first need to download a registry of sensors to obtain the IDs of the sensors we want.
+As explained [in the relative chapter](#Registry-download) to download a set of observations we first need to download a registry of sensors to obtain the IDs of the sensors we want.
 
 However, for all the case dates identified for the LEXIS projects, we will provide a list of IDs to download, that we prepared in CIMA server. We pre-filtered the stations to exclude the ones that are not performing well for the date of the study. 
 
@@ -374,7 +374,7 @@ Sensors data must be downloaded specified an aggregation time of 60 seconds (1m)
 Our WRFDA run also assimilates radar data, with the same timing as the personal weather stations (N, N-3H, N-6H).
 For each one of these needed instants, three sets of variables are needed for the different levels. These variables are CAPPI2, CAPPI3, CAPPI5.
 
-You can download the datasets as [explained here](#Radar%20data)
+You can download the datasets as [explained here](#Radar-data)
 
 [here](https://github.com/cima-lexis/lexisdn/blob/master/fetcher/wrfda-radars.go) you can find an example script that downloads all radar files needed.
 
@@ -382,7 +382,7 @@ You can download the datasets as [explained here](#Radar%20data)
 
 ## Continuum
 
-Continuum needs wunderground station data from 60H before the start of the run. The datasets can be downloaded as [explained here](#Puntual%20observations%20download).
+Continuum needs wunderground station data from 60H before the start of the run. The datasets can be downloaded as [explained here](#Puntual-observations-download).
 
 Needed sensors classes are:
 
@@ -414,7 +414,7 @@ Risico could make use of the following wunderground sensors classes:
 * IGROMETRO    -> relative humidity
 
 Risico needs sensors data for 72H before the start of the run.
-Data must be downloaded as interpolated maps, as [explained here](#Interpolated%20maps)
+Data must be downloaded as interpolated maps, as [explained here](#Interpolated-maps)
 
 [here](https://github.com/cima-lexis/lexisdn/blob/master/fetcher/risico.go) you can find an example script that downloads all files needed by Risico simulation
 
