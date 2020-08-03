@@ -7,7 +7,7 @@ import (
 	"github.com/cima-lexis/lexisdn/config"
 )
 
-func (sess *Session) SensorsData(class string, ids []string, from, to time.Time, aggregation int) ([]byte, error) {
+func (sess *Session) SensorsData(class string, ids []string, from, to time.Time, aggregation int, log bool) ([]byte, error) {
 	sess.Refresh()
 	fromS := from.Format("200601021504")
 	toS := to.Format("200601021504")
@@ -20,7 +20,10 @@ func (sess *Session) SensorsData(class string, ids []string, from, to time.Time,
 		toS,
 		aggregation,
 	)
-
+	if log {
+		fmt.Printf(url)
+		fmt.Printf("IDS DA SCAIRCARE: %s\n", ids)
+	}
 	body := map[string][]string{
 		"sensors": ids,
 	}

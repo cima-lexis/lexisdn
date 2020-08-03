@@ -61,6 +61,7 @@ func (sess *Session) Login() error {
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
+	//fmt.Println(string(body))
 	if err != nil {
 		return fmt.Errorf("Error downloading HTTP response: %w", err)
 	}

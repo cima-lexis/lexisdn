@@ -7,9 +7,11 @@ import (
 	"github.com/cima-lexis/lexisdn/config"
 )
 
-func (sess *Session) SensorsList(class string, filter Domain) ([]string, error) {
+func (sess *Session) SensorsList(class string, filter Domain, log bool) ([]string, error) {
 	sess.Refresh()
-
+	if log {
+		fmt.Println(config.Config.URL + "sensors/list/" + class)
+	}
 	body, err := sess.DoGet(config.Config.URL + "sensors/list/" + class)
 	if err != nil {
 		return nil, fmt.Errorf("Error performing GET: %w", err)
@@ -24,13 +26,15 @@ func (sess *Session) SensorsList(class string, filter Domain) ([]string, error) 
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing JSON: %w", err)
 	}
-
+	if log {
+		fmt.Println(sensors)
+	}
 	result := []string{}
 	for _, sensor := range sensors {
 		if sensor.Lat < filter.MinLat || sensor.Lat > filter.MaxLat {
 			continue
 		}
-		if sensor.Lng > filter.MinLon || sensor.Lng > filter.MaxLon {
+		if sensor.Lng < filter.MinLon || sensor.Lng > filter.MaxLon {
 			continue
 		}
 

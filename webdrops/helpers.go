@@ -23,8 +23,8 @@ func (sess *Session) DoGet(url string) ([]byte, error) {
 	}
 	if res.StatusCode != http.StatusOK {
 		defer res.Body.Close()
-		body, _ := ioutil.ReadAll(res.Body)
-		fmt.Println(string(body))
+		//body, _ := ioutil.ReadAll(res.Body)
+		//fmt.Println(string(body))
 
 		return nil, fmt.Errorf("Error submitting request: HTTP status: %s", res.Status)
 	}

@@ -37,9 +37,9 @@ func WrfdaRadars(sess webdrops.Session, simulStartDate time.Time) error {
 	}
 
 	fetchDate := func(date time.Time) {
-		fetcher.fetchRadar(date, "CAPPI2")
-		fetcher.fetchRadar(date, "CAPPI3")
-		fetcher.fetchRadar(date, "CAPPI5")
+		fetcher.fetchRadar(date, "CAPPI2", true)
+		fetcher.fetchRadar(date, "CAPPI3", false)
+		fetcher.fetchRadar(date, "CAPPI5", false)
 
 	}
 
@@ -56,12 +56,12 @@ type wrfdaRadarsSession struct {
 	//domain    webdrops.Domain
 }
 
-func (fetcher *wrfdaRadarsSession) fetchRadar(date time.Time, varName string) {
+func (fetcher *wrfdaRadarsSession) fetchRadar(date time.Time, varName string, log bool) {
 	if fetcher.sessError != nil {
 		return
 	}
 
-	timeline, err := fetcher.sess.RadarTimeline(date)
+	timeline, err := fetcher.sess.RadarTimeline(date, log)
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("Error downloading radars timeline: %w", err)
 		return

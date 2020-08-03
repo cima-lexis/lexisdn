@@ -36,13 +36,25 @@ func WrfdaSensors(sess webdrops.Session, simulStartDate time.Time, domain webdro
 		domain: domain,
 	}
 
+	sensorClasses := []string{
+		"DIREZIONEVENTO",
+		"IGROMETRO",
+		"TERMOMETRO",
+		"ANEMOMETRO",
+		"PLUVIOMETRO",
+		"BAROMETRO",
+	}
+
+	idsByClass := make([][]string, len(sensorClasses))
+
+	for idx, class := range sensorClasses {
+		idsByClass[idx] = fetcher.fetchSensorIDs(class, false)
+	}
+
 	fetchDate := func(date time.Time) {
-		fetcher.fetchSensor("DIREZIONEVENTO", date)
-		fetcher.fetchSensor("IGROMETRO", date)
-		fetcher.fetchSensor("TERMOMETRO", date)
-		fetcher.fetchSensor("ANEMOMETRO", date)
-		fetcher.fetchSensor("PLUVIOMETRO", date)
-		fetcher.fetchSensor("BAROMETRO", date)
+		for idx, class := range sensorClasses {
+			fetcher.fetchSensor(class, idsByClass[idx], date, false)
+		}
 	}
 
 	fetchDate(simulStartDate)
@@ -58,15 +70,23 @@ type wrfdaSensorsSession struct {
 	domain    webdrops.Domain
 }
 
-func (fetcher *wrfdaSensorsSession) fetchSensor(class string, date time.Time) {
+func (fetcher *wrfdaSensorsSession) fetchSensorIDs(class string, log bool) []string {
 	if fetcher.sessError != nil {
-		return
+		return nil
 	}
+
 	fmt.Fprintf(os.Stderr, "Downloading sensors registry for %s\n", class)
-	ids, err := fetcher.sess.SensorsList(class, fetcher.domain)
+	ids, err := fetcher.sess.SensorsList(class, fetcher.domain, log)
 	fmt.Fprintf(os.Stderr, "Found %d sensors\n", len(ids))
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("Error fetching sensors list: %w", err)
+		return nil
+	}
+	return ids
+}
+
+func (fetcher *wrfdaSensorsSession) fetchSensor(class string, ids []string, date time.Time, log bool) {
+	if fetcher.sessError != nil {
 		return
 	}
 
@@ -74,7 +94,7 @@ func (fetcher *wrfdaSensorsSession) fetchSensor(class string, date time.Time) {
 	to := date.Add(30 * time.Minute)
 
 	fmt.Fprintf(os.Stderr, "Downloading observations for %s on %s\n", class, date.Format("02/01/2006 15"))
-	observations, err := fetcher.sess.SensorsData(class, ids, from, to, 60)
+	observations, err := fetcher.sess.SensorsData(class, ids, from, to, 60, log)
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("Error fetching sensors data: %w", err)
 		return

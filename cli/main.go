@@ -73,11 +73,12 @@ func main() {
 			err = fetcher.ContinuumSensors(sess, startDateWRF, webdrops.ItalyDomain)
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
 		case "WRFDA":
+			err = fetcher.WrfdaSensors(sess, startDateWRF, webdrops.ItalyDomain)
+			fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
+
 			err = fetcher.WrfdaRadars(sess, startDateWRF)
 			fatalIfError(err, "Error fetching radar data for WRFDA: %w")
 
-			err = fetcher.WrfdaSensors(sess, startDateWRF, webdrops.ItalyDomain)
-			fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
 		}
 	}
 

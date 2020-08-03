@@ -35,11 +35,11 @@ func ContinuumSensors(sess webdrops.Session, simulStartDate time.Time, domain we
 	from := simulStartDate.Add(-60 * time.Hour)
 	to := simulStartDate
 
-	fetcher.fetchSensor("RADIOMETRO", from, to)
-	fetcher.fetchSensor("IGROMETRO", from, to)
-	fetcher.fetchSensor("TERMOMETRO", from, to)
-	fetcher.fetchSensor("ANEMOMETRO", from, to)
-	fetcher.fetchSensor("PLUVIOMETRO", from, to)
+	fetcher.fetchSensor("RADIOMETRO", from, to, false)
+	fetcher.fetchSensor("IGROMETRO", from, to, false)
+	fetcher.fetchSensor("TERMOMETRO", from, to, false)
+	fetcher.fetchSensor("ANEMOMETRO", from, to, false)
+	fetcher.fetchSensor("PLUVIOMETRO", from, to, false)
 
 	return fetcher.sessError
 }
@@ -50,12 +50,12 @@ type continuumSession struct {
 	domain    webdrops.Domain
 }
 
-func (fetcher *continuumSession) fetchSensor(class string, from, to time.Time) {
+func (fetcher *continuumSession) fetchSensor(class string, from, to time.Time, log bool) {
 	if fetcher.sessError != nil {
 		return
 	}
 	fmt.Fprintf(os.Stderr, "Downloading sensors registry for %s\n", class)
-	ids, err := fetcher.sess.SensorsList(class, fetcher.domain)
+	ids, err := fetcher.sess.SensorsList(class, fetcher.domain, log)
 	fmt.Fprintf(os.Stderr, "Found %d sensors\n", len(ids))
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("Error fetching sensors list: %w", err)
@@ -63,7 +63,7 @@ func (fetcher *continuumSession) fetchSensor(class string, from, to time.Time) {
 	}
 
 	fmt.Fprintf(os.Stderr, "Downloading observations for %s from %s to %s\n", class, from.Format("02/01/2006 15"), to.Format("02/01/2006 15"))
-	observations, err := fetcher.sess.SensorsData(class, ids, from, to, 3600)
+	observations, err := fetcher.sess.SensorsData(class, ids, from, to, 3600, false)
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("Error fetching sensors data: %w", err)
 		return
