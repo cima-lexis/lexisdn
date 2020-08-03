@@ -382,7 +382,7 @@ You can download the datasets as [explained here](#Radar-data)
 
 ## Continuum
 
-Continuum needs wunderground station data from 60H before the start of the run. The datasets can be downloaded as [explained here](#Puntual-observations-download).
+Continuum needs wunderground station data from 60H before the start of the run. The datasets can be downloaded as [explained here](#Punctual-observations-download).
 
 Needed sensors classes are:
 
