@@ -418,8 +418,21 @@ Data must be downloaded as interpolated maps, as [explained here](#Interpolated 
 
 [here](https://github.com/cima-lexis/lexisdn/blob/master/fetcher/risico.go) you can find an example script that downloads all files needed by Risico simulation
 
+Furthermore, Risico needs 48 hours of WRF simulation output to warmup its calculations.
+Thus means you need to download 48 hours of GFS data before the start of the run, organized in two datasets of 24 hours each.
 
+You must feed this data to run the WPS two times more, for each of 24 hours set, and with its results, you have to run two additional WRF simulation. WRF output must be feeded back to Risico docker, together with results of the main simulation and the sensor maps.
 
+Example: 
 
+the user require 48 hours of forecast starting from 2020-07-15 00:00
+
+Referring to the chapter on [GFS data download](#GFS-data), you must download following GFS files:
+
+ds_date=20200713 ds_hour=0 fileno=0 to 24
+
+ds_date=20200714 ds_hour=0 fileno=0 to 24
+
+ds_date=20200715 ds_hour=0 fileno=0 to 48
 
 
