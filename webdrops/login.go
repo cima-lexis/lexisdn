@@ -1,11 +1,8 @@
 package webdrops
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"html/template"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -18,23 +15,6 @@ type Session struct {
 	Token        string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	ClientID     string
-}
-
-func parseTemplate(tmplS string, args interface{}) (io.Reader, error) {
-	tmpl := template.New("query")
-	_, err := tmpl.Parse("client_id={{.ClientID}}&grant_type=password&password={{.Password}}&username={{.User}}")
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing querystring template: %w", err)
-	}
-
-	var tmplResult bytes.Buffer
-
-	err = tmpl.Execute(&tmplResult, config.Config)
-	if err != nil {
-		return nil, fmt.Errorf("Error building querystring: %w", err)
-	}
-
-	return strings.NewReader(tmplResult.String()), nil
 }
 
 func (sess *Session) Login() error {
