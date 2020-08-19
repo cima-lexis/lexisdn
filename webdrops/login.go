@@ -1,13 +1,11 @@
 package webdrops
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"html/template"
-	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/cima-lexis/lexisdn/config"
@@ -19,31 +17,16 @@ type Session struct {
 	ClientID     string
 }
 
-func parseTemplate(tmplS string, args interface{}) (io.Reader, error) {
-	tmpl := template.New("query")
-	_, err := tmpl.Parse("client_id={{.ClientID}}&grant_type=password&password={{.Password}}&username={{.User}}")
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing querystring template: %w", err)
-	}
-
-	var tmplResult bytes.Buffer
-
-	err = tmpl.Execute(&tmplResult, config.Config)
-	if err != nil {
-		return nil, fmt.Errorf("Error building querystring: %w", err)
-	}
-
-	return strings.NewReader(tmplResult.String()), nil
-}
-
 func (sess *Session) Login() error {
-	payload, err := parseTemplate(
-		"client_id={{.ClientID}}&grant_type=password&password={{.Password}}&username={{.User}}",
-		config.Config,
-	)
+
+	data := url.Values{}
+	data.Set("client_id", config.Config.ClientID)
+	data.Set("grant_type", "password")
+	data.Set("password", config.Config.Password)
+	data.Set("username", config.Config.User)
 
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", config.Config.AuthURL, payload)
+	req, err := http.NewRequest("POST", config.Config.AuthURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("Error creating HTTP request: %w", err)
 	}
@@ -70,13 +53,14 @@ func (sess *Session) Login() error {
 }
 
 func (sess *Session) Refresh() error {
-	payload, err := parseTemplate(
-		"client_id={{.ClientID}}&grant_type=refresh_token&refresh_token={{.RefreshToken}}",
-		config.Config,
-	)
+
+	data := url.Values{}
+	data.Set("client_id", config.Config.ClientID)
+	data.Set("grant_type", "refresh_token")
+	data.Set("refresh_token", sess.RefreshToken)
 
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", config.Config.AuthURL, payload)
+	req, err := http.NewRequest("POST", config.Config.AuthURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("Error creating HTTP request: %w", err)
 	}
