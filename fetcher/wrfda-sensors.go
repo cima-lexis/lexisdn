@@ -45,15 +45,10 @@ func WrfdaSensors(sess webdrops.Session, simulStartDate time.Time, domain webdro
 		"BAROMETRO",
 	}
 
-	idsByClass := make([][]string, len(sensorClasses))
-
-	for idx, class := range sensorClasses {
-		idsByClass[idx] = fetcher.fetchSensorIDs(class, false)
-	}
-
 	fetchDate := func(date time.Time) {
-		for idx, class := range sensorClasses {
-			fetcher.fetchSensor(class, idsByClass[idx], date, false)
+		for _, class := range sensorClasses {
+			ids := fetcher.fetchSensorIDs(class, date, domain)
+			fetcher.fetchSensor(class, ids, date, false)
 		}
 	}
 
@@ -70,16 +65,40 @@ type wrfdaSensorsSession struct {
 	domain    webdrops.Domain
 }
 
-func (fetcher *wrfdaSensorsSession) fetchSensorIDs(class string, log bool) []string {
+func (fetcher *wrfdaSensorsSession) fetchSensorIDs(class string, date time.Time, domain webdrops.Domain) []string {
 	if fetcher.sessError != nil {
 		return nil
 	}
 
 	fmt.Fprintf(os.Stderr, "Downloading sensors registry for %s\n", class)
-	ids, err := fetcher.sess.SensorsList(class, fetcher.domain, log)
-	fmt.Fprintf(os.Stderr, "Found %d sensors\n", len(ids))
+	sensorAnag, err := fetcher.sess.SensorsList(class) //, fetcher.domain, log)
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("Error fetching sensors list: %w", err)
+		return nil
+	}
+
+	jsonFilePath := filepath.Join(
+		"WRFDA/SENSORS",
+		date.Format("2006010215"),
+		fmt.Sprintf("anag-%s.json", class),
+	)
+
+	err = os.MkdirAll(filepath.Dir(jsonFilePath), os.FileMode(0755))
+	if err != nil {
+		fetcher.sessError = fmt.Errorf("Error creating directory `%s`: %w", filepath.Dir(jsonFilePath), err)
+		return nil
+	}
+
+	fmt.Fprintf(os.Stderr, "Saving observations to %s\n", jsonFilePath)
+	err = ioutil.WriteFile(jsonFilePath, sensorAnag, os.FileMode(0644))
+	if err != nil {
+		fetcher.sessError = fmt.Errorf("Error saving sensors data to `%s`: %w", jsonFilePath, err)
+	}
+
+	ids, err := fetcher.sess.IdFromSensorsList(sensorAnag, domain)
+	fmt.Fprintf(os.Stderr, "Found %d sensors\n", len(ids))
+	if err != nil {
+		fetcher.sessError = fmt.Errorf("Error creating directory `%s`: %w", filepath.Dir(jsonFilePath), err)
 		return nil
 	}
 	return ids

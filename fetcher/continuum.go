@@ -55,12 +55,18 @@ func (fetcher *continuumSession) fetchSensor(class string, from, to time.Time, l
 		return
 	}
 	fmt.Fprintf(os.Stderr, "Downloading sensors registry for %s\n", class)
-	ids, err := fetcher.sess.SensorsList(class, fetcher.domain, log)
-	fmt.Fprintf(os.Stderr, "Found %d sensors\n", len(ids))
+	sensorRegistry, err := fetcher.sess.SensorsList(class)
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("Error fetching sensors list: %w", err)
 		return
 	}
+
+	ids, err := fetcher.sess.IdFromSensorsList(sensorRegistry, fetcher.domain)
+	if err != nil {
+		fetcher.sessError = fmt.Errorf("Error readings ids: %w", err)
+		return
+	}
+	fmt.Fprintf(os.Stderr, "Found %d sensors\n", len(ids))
 
 	fmt.Fprintf(os.Stderr, "Downloading observations for %s from %s to %s\n", class, from.Format("02/01/2006 15"), to.Format("02/01/2006 15"))
 	observations, err := fetcher.sess.SensorsData(class, ids, from, to, 3600, false)
@@ -73,6 +79,10 @@ func (fetcher *continuumSession) fetchSensor(class string, from, to time.Time, l
 		"CONTINUUM/SENSORS",
 		fmt.Sprintf("%s.json", class),
 	)
+	jsonAnagFilePath := filepath.Join(
+		"CONTINUUM/SENSORS",
+		fmt.Sprintf("anag-%s.json", class),
+	)
 
 	err = os.MkdirAll(filepath.Dir(jsonFilePath), os.FileMode(0755))
 	if err != nil {
@@ -84,6 +94,10 @@ func (fetcher *continuumSession) fetchSensor(class string, from, to time.Time, l
 	err = ioutil.WriteFile(jsonFilePath, observations, os.FileMode(0644))
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("Error saving sensors data to `%s`: %w", jsonFilePath, err)
+	}
+	err = ioutil.WriteFile(jsonAnagFilePath, sensorRegistry, os.FileMode(0644))
+	if err != nil {
+		fetcher.sessError = fmt.Errorf("Error saving sensors reg data to `%s`: %w", jsonFilePath, err)
 	}
 
 }

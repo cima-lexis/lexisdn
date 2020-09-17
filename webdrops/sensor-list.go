@@ -7,28 +7,17 @@ import (
 	"github.com/cima-lexis/lexisdn/config"
 )
 
-func (sess *Session) SensorsList(class string, filter Domain, log bool) ([]string, error) {
-	sess.Refresh()
-	if log {
-		fmt.Println(config.Config.URL + "sensors/list/" + class)
-	}
-	body, err := sess.DoGet(config.Config.URL + "sensors/list/" + class)
-	if err != nil {
-		return nil, fmt.Errorf("Error performing GET: %w", err)
-	}
-
+func (sess *Session) IdFromSensorsList(sensorList []byte, filter Domain) ([]string, error) {
 	var sensors = []struct {
 		ID  string
 		Lng float64
 		Lat float64
 	}{}
-	err = json.Unmarshal(body, &sensors)
+	err := json.Unmarshal(sensorList, &sensors)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing JSON: %w", err)
 	}
-	if log {
-		fmt.Println(sensors)
-	}
+
 	result := []string{}
 	for _, sensor := range sensors {
 		if sensor.Lat < filter.MinLat || sensor.Lat > filter.MaxLat {
@@ -42,4 +31,11 @@ func (sess *Session) SensorsList(class string, filter Domain, log bool) ([]strin
 	}
 
 	return result, nil
+}
+
+func (sess *Session) SensorsList(class string) ([]byte, error) {
+	sess.Refresh()
+
+	return sess.DoGet(config.Config.URL + "sensors/list/" + class)
+
 }
