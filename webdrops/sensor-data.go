@@ -20,10 +20,6 @@ func (sess *Session) SensorsData(class string, ids []string, from, to time.Time,
 		toS,
 		aggregation,
 	)
-	if log {
-		fmt.Printf(url)
-		fmt.Printf("IDS DA SCAIRCARE: %s\n", ids)
-	}
 	body := map[string][]string{
 		"sensors": ids,
 	}

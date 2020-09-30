@@ -71,7 +71,7 @@ func (fetcher *wrfdaSensorsSession) fetchSensorIDs(class string, date time.Time,
 	}
 
 	fmt.Fprintf(os.Stderr, "Downloading sensors registry for %s\n", class)
-	sensorAnag, err := fetcher.sess.SensorsList(class) //, fetcher.domain, log)
+	sensorAnag, err := fetcher.sess.SensorsList(class, webdrops.GroupWunderground)
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("Error fetching sensors list: %w", err)
 		return nil

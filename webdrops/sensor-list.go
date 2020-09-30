@@ -3,6 +3,7 @@ package webdrops
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	"github.com/cima-lexis/lexisdn/config"
 )
@@ -33,9 +34,26 @@ func (sess *Session) IdFromSensorsList(sensorList []byte, filter Domain) ([]stri
 	return result, nil
 }
 
-func (sess *Session) SensorsList(class string) ([]byte, error) {
+type SensorGroup int
+
+const (
+	GroupWunderground SensorGroup = iota
+	GroupDPC
+)
+
+func (g SensorGroup) String() string {
+	if g == GroupDPC {
+		return url.QueryEscape("Dewetra%default")
+	}
+
+	if g == GroupWunderground {
+		return url.QueryEscape("DewetraWorld%WunderEurope")
+	}
+
+	panic(fmt.Sprintf("Unknown group %d", g))
+}
+
+func (sess *Session) SensorsList(class string, group SensorGroup) ([]byte, error) {
 	sess.Refresh()
-
-	return sess.DoGet(config.Config.URL + "sensors/list/" + class)
-
+	return sess.DoGet(fmt.Sprintf("%ssensors/list/%s?stationgroup=%s", config.Config.URL, class, group.String()))
 }

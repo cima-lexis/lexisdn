@@ -58,7 +58,7 @@ func (fetcher *risicoSession) fetchSensorMap(class string, from, to time.Time) {
 	}
 
 	fmt.Fprintf(os.Stderr, "Downloading observations map for %s from %s to %s\n", class, from.Format("02/01/2006 15"), to.Format("02/01/2006 15"))
-	sensorsMap, err := fetcher.sess.SensorsMap(class, from, to)
+	sensorsMap, err := fetcher.sess.SensorsMap(class, from, to, webdrops.GroupDPC)
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("Error fetching observations map: %w", err)
 		return
