@@ -7,7 +7,6 @@ import (
 	"github.com/cima-lexis/lexisdn/config"
 )
 
-//lonmin, latmin, lonmax, latmax
 func (sess *Session) SensorsMap(class string, from, to time.Time) ([]byte, error) {
 	sess.Refresh()
 	fromS := from.Format("200601021504")
