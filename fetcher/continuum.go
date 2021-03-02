@@ -95,7 +95,7 @@ func (fetcher *continuumSession) fetchSensor(class string, from, to time.Time, l
 	}
 	jsonAnagFilePath := filepath.Join(
 		"CONTINUUM/SENSORS",
-		fmt.Sprintf("anag-%s.json", class),
+		fmt.Sprintf("%s-registry.json", class),
 	)
 	err = ioutil.WriteFile(jsonAnagFilePath, sensorRegistry, os.FileMode(0644))
 	if err != nil {

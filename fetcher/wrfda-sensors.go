@@ -80,7 +80,7 @@ func (fetcher *wrfdaSensorsSession) fetchSensorIDs(class string, date time.Time,
 	jsonFilePath := filepath.Join(
 		"WRFDA/SENSORS",
 		date.Format("2006010215"),
-		fmt.Sprintf("anag-%s.json", class),
+		fmt.Sprintf("%s-registry.json", class),
 	)
 
 	err = os.MkdirAll(filepath.Dir(jsonFilePath), os.FileMode(0755))

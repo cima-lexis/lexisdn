@@ -1,13 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
 	"github.com/cima-lexis/lexisdn/config"
 	"github.com/cima-lexis/lexisdn/fetcher"
 	"github.com/cima-lexis/lexisdn/webdrops"
+	"github.com/meteocima/dewetra2wrf/trusted"
+	"github.com/meteocima/radar2wrf/radar"
 )
 
 func usage(errmsg string, args ...interface{}) {
@@ -61,8 +65,10 @@ func main() {
 	sess := webdrops.Session{}
 	err := sess.Login()
 	fatalIfError(err, "Error during login: %w")
-
 	startDateWRF, err := time.Parse("2006010215", os.Args[1])
+	fatalIfError(err, "date not valid: %w")
+
+	fmt.Println(startDateWRF.Format("2006010215"))
 
 	for _, downloadType := range os.Args[2:] {
 		switch downloadType {
@@ -75,11 +81,68 @@ func main() {
 		case "WRFDA":
 			err = fetcher.WrfdaSensors(sess, startDateWRF, webdrops.ItalyDomain)
 			fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
-
 			err = fetcher.WrfdaRadars(sess, startDateWRF)
 			fatalIfError(err, "Error fetching radar data for WRFDA: %w")
 
+			err = nil
+			convertStations(startDateWRF, &err)
+			convertStations(startDateWRF.Add(-3*time.Hour), &err)
+			convertStations(startDateWRF.Add(-6*time.Hour), &err)
+
+			convertRadar(startDateWRF, &err)
+			convertRadar(startDateWRF.Add(-3*time.Hour), &err)
+			convertRadar(startDateWRF.Add(-6*time.Hour), &err)
+
+			fatalIfError(err, "cannot convert weather stations data: %w")
+
+			os.RemoveAll("WRFDA")
 		}
 	}
 
 }
+
+func convertRadar(date time.Time, err *error) {
+	if *err != nil {
+		return
+	}
+
+	dtS := date.Format("2006010215")
+	dir := "WRFDA/RADARS/" + dtS
+
+	reader, e := radar.Convert(dir, dtS)
+	if e != nil {
+		*err = e
+		return
+	}
+	outfile, e := os.OpenFile("ob.radar."+dtS, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(0644))
+	if e != nil {
+		*err = e
+		return
+	}
+
+	outfileBuff := bufio.NewWriter(outfile)
+
+	defer outfile.Close()
+	_, *err = io.Copy(outfileBuff, reader)
+
+}
+
+func convertStations(date time.Time, err *error) {
+	if *err != nil {
+		return
+	}
+	*err = trusted.Get(
+		trusted.DewetraFormat,
+		"WRFDA/SENSORS/"+date.Format("2006010215"),
+		"ob.ascii."+date.Format("2006010215"),
+		"24,64,-19,48",
+		date,
+	)
+}
+
+/*
+leftlon = -19.0
+rightlon = 48.0
+toplat = 64.0
+bottomlat = 24.0
+*/
