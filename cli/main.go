@@ -19,7 +19,7 @@ func usage(errmsg string, args ...interface{}) {
 	fmt.Fprint(os.Stderr, "\n\n")
 	fmt.Fprintln(os.Stderr, `Usage: lexisdn STARTDATE [DOWNLOAD_TYPE ...]
 	STARTDATE - Satrt date/time of the simulation, in format YYYYMMDDHH
-	DOWNLOAD_TYPE - types of data to download. One or more of "RISICO" | "CONTINUUM" | "WRFDA", separated by space
+	DOWNLOAD_TYPE - types of data to download. One or more of "RISICO" | "CONTINUUM" | "WRFDAIT" | "WRFDAFR", separated by space
 	`)
 	os.Exit(1)
 }
@@ -41,8 +41,12 @@ func checkArguments() {
 	for _, downloadType := range os.Args[2:] {
 		switch downloadType {
 		case "RISICO":
+			continue
 		case "CONTINUUM":
-		case "WRFDA":
+			continue
+		case "WRFDAIT":
+			continue
+		case "WRFDAFR":
 			continue
 		default:
 			usage("Invalid DOWNLOAD_TYPE argument `%s`.", downloadType)
@@ -78,27 +82,41 @@ func main() {
 		case "CONTINUUM":
 			err = fetcher.ContinuumSensors(sess, startDateWRF, webdrops.ItalyDomain)
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
-		case "WRFDA":
-			err = fetcher.WrfdaSensors(sess, startDateWRF, webdrops.ItalyDomain)
-			fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
-			err = fetcher.WrfdaRadars(sess, startDateWRF)
-			fatalIfError(err, "Error fetching radar data for WRFDA: %w")
+		case "WRFDAIT":
+			getStations(sess, startDateWRF)
+			getRadars(sess, startDateWRF)
 
-			err = nil
-			convertStations(startDateWRF, &err)
-			convertStations(startDateWRF.Add(-3*time.Hour), &err)
-			convertStations(startDateWRF.Add(-6*time.Hour), &err)
-
-			convertRadar(startDateWRF, &err)
-			convertRadar(startDateWRF.Add(-3*time.Hour), &err)
-			convertRadar(startDateWRF.Add(-6*time.Hour), &err)
-
-			fatalIfError(err, "cannot convert weather stations data: %w")
+			os.RemoveAll("WRFDA")
+		case "WRFDAFR":
+			getStations(sess, startDateWRF)
+			//getRadars(err, sess, startDateWRF)
 
 			os.RemoveAll("WRFDA")
 		}
 	}
 
+}
+
+func getRadars(sess webdrops.Session, startDateWRF time.Time) {
+	err := fetcher.WrfdaRadars(sess, startDateWRF)
+	fatalIfError(err, "Error fetching radar data for WRFDA: %w")
+
+	convertRadar(startDateWRF, &err)
+	convertRadar(startDateWRF.Add(-3*time.Hour), &err)
+	convertRadar(startDateWRF.Add(-6*time.Hour), &err)
+
+	fatalIfError(err, "cannot convert radar data: %w")
+}
+
+func getStations(sess webdrops.Session, startDateWRF time.Time) {
+	err := fetcher.WrfdaSensors(sess, startDateWRF, webdrops.ItalyDomain)
+	fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
+
+	convertStations(startDateWRF, &err)
+	convertStations(startDateWRF.Add(-3*time.Hour), &err)
+	convertStations(startDateWRF.Add(-6*time.Hour), &err)
+
+	fatalIfError(err, "cannot convert weather stations data: %w")
 }
 
 func convertRadar(date time.Time, err *error) {
