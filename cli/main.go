@@ -125,6 +125,7 @@ func convertRadar(date time.Time, err *error) {
 	}
 
 	dtS := date.Format("2006010215")
+	fmt.Printf("Converting radar", dtS)
 	dir := "WRFDA/RADARS/" + dtS
 
 	reader, e := radar.Convert(dir, dtS)
@@ -149,10 +150,14 @@ func convertStations(date time.Time, err *error) {
 	if *err != nil {
 		return
 	}
+
+	dtS := date.Format("2006010215")
+	fmt.Printf("Converting stations", dtS)
+
 	*err = trusted.Get(
 		trusted.DewetraFormat,
-		"WRFDA/SENSORS/"+date.Format("2006010215"),
-		"ob.ascii."+date.Format("2006010215"),
+		"WRFDA/SENSORS/"+dtS,
+		"ob.ascii."+dtS,
 		"24,64,-19,48",
 		date,
 	)
