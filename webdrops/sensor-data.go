@@ -8,7 +8,6 @@ import (
 )
 
 func (sess *Session) SensorsData(class string, ids []string, from, to time.Time, aggregation int, log bool) ([]byte, error) {
-	sess.Refresh()
 	fromS := from.Format("200601021504")
 	toS := to.Format("200601021504")
 

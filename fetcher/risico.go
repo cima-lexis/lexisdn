@@ -26,7 +26,13 @@ import (
 //
 // Observations are saved, under cwd, on directory RISICO/SENSORS/<STEP START DATE>
 // with name <SENSORCLASS>.nc
-func RisicoSensorsMaps(sess webdrops.Session, simulStartDate time.Time) error {
+func RisicoSensorsMaps(simulStartDate time.Time) error {
+	sess := webdrops.Session{}
+	err := sess.Login()
+	if err != nil {
+		return nil
+	}
+
 	fetcher := risicoSession{
 		sess: sess,
 	}

@@ -8,7 +8,6 @@ import (
 )
 
 func (sess *Session) RadarData(date time.Time, varName string) ([]byte, error) {
-	sess.Refresh()
 
 	url := fmt.Sprintf(
 		"%scoverages/RADAR_DPC_HDF5_CAPPI/%s/%s/-/all",

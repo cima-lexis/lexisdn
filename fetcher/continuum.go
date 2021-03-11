@@ -26,7 +26,12 @@ import (
 //
 // Observations are saved, under cwd, on directory CONTINUUM/SENSORS/
 // with name <SENSORCLASS>.json
-func ContinuumSensors(sess webdrops.Session, simulStartDate time.Time, domain webdrops.Domain) error {
+func ContinuumSensors(simulStartDate time.Time, domain webdrops.Domain) error {
+	sess := webdrops.Session{}
+	err := sess.Login()
+	if err != nil {
+		return nil
+	}
 	fetcher := continuumSession{
 		sess:   sess,
 		domain: domain,

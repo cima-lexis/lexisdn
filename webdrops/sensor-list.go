@@ -54,6 +54,5 @@ func (g SensorGroup) String() string {
 }
 
 func (sess *Session) SensorsList(class string, group SensorGroup) ([]byte, error) {
-	sess.Refresh()
 	return sess.DoGet(fmt.Sprintf("%ssensors/list/%s?stationgroup=%s", config.Config.URL, class, group.String()))
 }

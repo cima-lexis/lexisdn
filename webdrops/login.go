@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/cima-lexis/lexisdn/config"
 )
@@ -14,7 +16,9 @@ import (
 type Session struct {
 	Token        string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    uint64 `json:"refresh_expires_in"`
 	ClientID     string
+	RefreshedAt  time.Time
 }
 
 func (sess *Session) Login() error {
@@ -25,7 +29,9 @@ func (sess *Session) Login() error {
 	data.Set("password", config.Config.Password)
 	data.Set("username", config.Config.User)
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second,
+	}
 	req, err := http.NewRequest("POST", config.Config.AuthURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("Error creating HTTP request: %w", err)
@@ -49,10 +55,18 @@ func (sess *Session) Login() error {
 		return fmt.Errorf("Error downloading HTTP response: %w", err)
 	}
 	sess.ClientID = config.Config.ClientID
-	return json.Unmarshal(body, sess)
+	err = json.Unmarshal(body, sess)
+	sess.RefreshedAt = time.Now()
+	sess.ExpiresIn = 30
+	return err
 }
 
-func (sess *Session) Refresh() error {
+func (sess *Session) refresh() error {
+	secondsPassedFromToken := uint64(math.Floor(time.Now().Sub(sess.RefreshedAt).Seconds()))
+	fmt.Println("passed", secondsPassedFromToken, "of", sess.ExpiresIn)
+	/*if secondsPassedFromToken < sess.ExpiresIn {
+		return nil
+	}*/
 
 	data := url.Values{}
 	data.Set("client_id", config.Config.ClientID)
@@ -81,7 +95,10 @@ func (sess *Session) Refresh() error {
 	if err != nil {
 		return fmt.Errorf("Error downloading HTTP response: %w", err)
 	}
-
-	return json.Unmarshal(body, sess)
+	//fmt.Printf("Before: \nTk:%s\nRefTk:%s\n", sess.Token, sess.RefreshToken)
+	ret := json.Unmarshal(body, sess)
+	//fmt.Printf("After: \nTk:%s\nRefTk:%s\n", sess.Token, sess.RefreshToken)
+	sess.RefreshedAt = time.Now()
+	return ret
 
 }

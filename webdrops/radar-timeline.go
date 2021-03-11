@@ -10,7 +10,6 @@ import (
 )
 
 func (sess *Session) RadarTimeline(date time.Time, log bool) ([]time.Time, error) {
-	sess.Refresh()
 	from := date.Add(-30 * time.Minute)
 	to := date.Add(30 * time.Minute)
 
@@ -26,7 +25,7 @@ func (sess *Session) RadarTimeline(date time.Time, log bool) ([]time.Time, error
 		return nil, fmt.Errorf("Error performing Post: %w", err)
 	}
 	if log {
-		fmt.Println(string(body))
+		//fmt.Println(string(body))
 	}
 	var timeline []string
 	err = json.Unmarshal(body, &timeline)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/cima-lexis/lexisdn/config"
@@ -62,13 +63,11 @@ func fatalIfError(err error, msgerr string) {
 }
 
 func main() {
+
 	config.Init()
 
 	checkArguments()
 
-	sess := webdrops.Session{}
-	err := sess.Login()
-	fatalIfError(err, "Error during login: %w")
 	startDateWRF, err := time.Parse("2006010215", os.Args[1])
 	fatalIfError(err, "date not valid: %w")
 
@@ -77,18 +76,19 @@ func main() {
 	for _, downloadType := range os.Args[2:] {
 		switch downloadType {
 		case "RISICO":
-			err = fetcher.RisicoSensorsMaps(sess, startDateWRF)
+			err = fetcher.RisicoSensorsMaps(startDateWRF)
 			fatalIfError(err, "Error fetching wunderground observations maps for RISICO: %w")
 		case "CONTINUUM":
-			err = fetcher.ContinuumSensors(sess, startDateWRF, webdrops.ItalyDomain)
+			err = fetcher.ContinuumSensors(startDateWRF, webdrops.ItalyDomain)
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
 		case "WRFDAIT":
-			getStations(sess, startDateWRF)
-			getRadars(sess, startDateWRF)
+			getConvertObs(startDateWRF, getConvertStationsSync)
+			getConvertObs(startDateWRF, getConvertRadarSync)
 
 			os.RemoveAll("WRFDA")
 		case "WRFDAFR":
-			getStations(sess, startDateWRF)
+			// TODO: use france domain here
+			getConvertObs(startDateWRF, getConvertStationsSync)
 			//getRadars(err, sess, startDateWRF)
 
 			os.RemoveAll("WRFDA")
@@ -97,26 +97,60 @@ func main() {
 
 }
 
-func getRadars(sess webdrops.Session, startDateWRF time.Time) {
-	err := fetcher.WrfdaRadars(sess, startDateWRF)
-	fatalIfError(err, "Error fetching radar data for WRFDA: %w")
+type getConvertFnT func(sess webdrops.Session, dt time.Time, done *sync.WaitGroup, errs chan error)
 
-	convertRadar(startDateWRF, &err)
-	convertRadar(startDateWRF.Add(-3*time.Hour), &err)
-	convertRadar(startDateWRF.Add(-6*time.Hour), &err)
+func getConvertRadarSync(sess webdrops.Session, dt time.Time, done *sync.WaitGroup, errs chan error) {
+	defer done.Done()
+	err := fetcher.WrfdaRadars(sess, dt)
 
-	fatalIfError(err, "cannot convert radar data: %w")
+	if err != nil {
+		errs <- err
+		return
+	}
+	convertRadar(dt, &err)
+	if err != nil {
+		errs <- err
+		return
+	}
 }
 
-func getStations(sess webdrops.Session, startDateWRF time.Time) {
-	err := fetcher.WrfdaSensors(sess, startDateWRF, webdrops.ItalyDomain)
+func getConvertStationsSync(sess webdrops.Session, dt time.Time, done *sync.WaitGroup, errs chan error) {
+	defer done.Done()
+	err := fetcher.WrfdaSensors(sess, dt, webdrops.ItalyDomain)
 	fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
 
-	convertStations(startDateWRF, &err)
-	convertStations(startDateWRF.Add(-3*time.Hour), &err)
-	convertStations(startDateWRF.Add(-6*time.Hour), &err)
+	if err != nil {
+		errs <- err
+		return
+	}
+	convertStations(dt, &err)
+	if err != nil {
+		errs <- err
+		return
+	}
+}
 
-	fatalIfError(err, "cannot convert weather stations data: %w")
+func getConvertObs(startDateWRF time.Time, getConvertFn getConvertFnT) {
+	errs := make(chan error)
+
+	var sess webdrops.Session
+	err := sess.Login()
+	fatalIfError(err, "Error during login: %w")
+
+	go func() {
+		allDone := sync.WaitGroup{}
+		allDone.Add(3)
+
+		/*go */
+		getConvertFn(sess, startDateWRF, &allDone, errs)
+		/*go */ getConvertFn(sess, startDateWRF.Add(-3*time.Hour), &allDone, errs)
+		/*go */ getConvertFn(sess, startDateWRF.Add(-6*time.Hour), &allDone, errs)
+		allDone.Wait()
+		close(errs)
+	}()
+
+	err = <-errs
+	fatalIfError(err, "cannot convert radar data: %w")
 }
 
 func convertRadar(date time.Time, err *error) {
@@ -125,7 +159,7 @@ func convertRadar(date time.Time, err *error) {
 	}
 
 	dtS := date.Format("2006010215")
-	fmt.Printf("Converting radar", dtS)
+	fmt.Printf("Converting radar %s\n", dtS)
 	dir := "WRFDA/RADARS/" + dtS
 
 	reader, e := radar.Convert(dir, dtS)
@@ -152,7 +186,7 @@ func convertStations(date time.Time, err *error) {
 	}
 
 	dtS := date.Format("2006010215")
-	fmt.Printf("Converting stations", dtS)
+	fmt.Printf("Converting stations %s\n", dtS)
 
 	*err = trusted.Get(
 		trusted.DewetraFormat,
