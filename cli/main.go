@@ -83,7 +83,7 @@ func main() {
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
 		case "WRFDAIT":
 			getConvertObs(startDateWRF, getConvertStationsSync)
-			getConvertObs(startDateWRF, getConvertRadarSync)
+			//da errore: getConvertObs(startDateWRF, getConvertRadarSync)
 
 			os.RemoveAll("WRFDA")
 		case "WRFDAFR":
@@ -123,6 +123,7 @@ func getConvertStationsSync(sess webdrops.Session, dt time.Time, done *sync.Wait
 		errs <- err
 		return
 	}
+
 	convertStations(dt, &err)
 	if err != nil {
 		errs <- err
@@ -141,10 +142,9 @@ func getConvertObs(startDateWRF time.Time, getConvertFn getConvertFnT) {
 		allDone := sync.WaitGroup{}
 		allDone.Add(3)
 
-		/*go */
 		getConvertFn(sess, startDateWRF, &allDone, errs)
-		/*go */ getConvertFn(sess, startDateWRF.Add(-3*time.Hour), &allDone, errs)
-		/*go */ getConvertFn(sess, startDateWRF.Add(-6*time.Hour), &allDone, errs)
+		getConvertFn(sess, startDateWRF.Add(-3*time.Hour), &allDone, errs)
+		getConvertFn(sess, startDateWRF.Add(-6*time.Hour), &allDone, errs)
 		allDone.Wait()
 		close(errs)
 	}()
