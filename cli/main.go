@@ -143,8 +143,8 @@ func getConvertObs(startDateWRF time.Time, getConvertFn getConvertFnT) {
 		allDone.Add(3)
 
 		getConvertFn(sess, startDateWRF, &allDone, errs)
-		getConvertFn(sess, startDateWRF.Add(-3*time.Hour), &allDone, errs)
-		getConvertFn(sess, startDateWRF.Add(-6*time.Hour), &allDone, errs)
+		//getConvertFn(sess, startDateWRF.Add(-3*time.Hour), &allDone, errs)
+		//getConvertFn(sess, startDateWRF.Add(-6*time.Hour), &allDone, errs)
 		allDone.Wait()
 		close(errs)
 	}()
