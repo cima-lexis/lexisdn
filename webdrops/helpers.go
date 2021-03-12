@@ -1,6 +1,7 @@
 package webdrops
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -118,8 +119,10 @@ func (sess *Session) get(url string) ([]byte, error) {
 		return nil, fmt.Errorf("Error submitting request: HTTP status: %s", res.Status)
 	}
 
+	bodybuf := bufio.NewReaderSize(res.Body, 1024*1024)
+
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(bodybuf)
 	if err != nil {
 		return nil, fmt.Errorf("Error downloading HTTP response: %w", err)
 	}

@@ -37,12 +37,12 @@ func WrfdaSensors(sess webdrops.Session, simulStartDate time.Time, domain webdro
 	}
 
 	sensorClasses := []string{
-		//"DIREZIONEVENTO",
-		//"IGROMETRO",
+		"DIREZIONEVENTO",
+		"IGROMETRO",
 		"TERMOMETRO",
-		//"ANEMOMETRO",
-		//"PLUVIOMETRO",
-		//"BAROMETRO",
+		"ANEMOMETRO",
+		"PLUVIOMETRO",
+		"BAROMETRO",
 	}
 
 	fetchDate := func(date time.Time) {
@@ -53,8 +53,8 @@ func WrfdaSensors(sess webdrops.Session, simulStartDate time.Time, domain webdro
 	}
 
 	fetchDate(simulStartDate)
-	//fetchDate(simulStartDate.Add(-3 * time.Hour))
-	//fetchDate(simulStartDate.Add(-6 * time.Hour))
+	fetchDate(simulStartDate.Add(-3 * time.Hour))
+	fetchDate(simulStartDate.Add(-6 * time.Hour))
 
 	return fetcher.sessError
 }

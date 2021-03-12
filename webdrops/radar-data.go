@@ -10,8 +10,9 @@ import (
 func (sess *Session) RadarData(date time.Time, varName string) ([]byte, error) {
 
 	url := fmt.Sprintf(
-		"%scoverages/RADAR_DPC_HDF5_CAPPI/%s/%s/-/all",
+		"%scoverages/RADAR_DPC_HDF5_%s/%s/%s/-/all",
 		config.Config.URL,
+		varName,
 		date.Format("200601021504"),
 		varName,
 	)

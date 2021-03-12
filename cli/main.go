@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/cima-lexis/lexisdn/config"
@@ -83,7 +82,7 @@ func main() {
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
 		case "WRFDAIT":
 			getConvertObs(startDateWRF, getConvertStationsSync)
-			//da errore: getConvertObs(startDateWRF, getConvertRadarSync)
+			getConvertObs(startDateWRF, getConvertRadarSync)
 
 			os.RemoveAll("WRFDA")
 		case "WRFDAFR":
@@ -97,59 +96,36 @@ func main() {
 
 }
 
-type getConvertFnT func(sess webdrops.Session, dt time.Time, done *sync.WaitGroup, errs chan error)
+type getConvertFnT func(sess webdrops.Session, dt time.Time)
 
-func getConvertRadarSync(sess webdrops.Session, dt time.Time, done *sync.WaitGroup, errs chan error) {
-	defer done.Done()
+func getConvertRadarSync(sess webdrops.Session, dt time.Time) {
 	err := fetcher.WrfdaRadars(sess, dt)
+	fatalIfError(err, "Error WrfdaRadars wunderground observations for WRFDA: %w")
 
-	if err != nil {
-		errs <- err
-		return
-	}
 	convertRadar(dt, &err)
-	if err != nil {
-		errs <- err
-		return
-	}
+	convertRadar(dt.Add(-3*time.Hour), &err)
+	convertRadar(dt.Add(-6*time.Hour), &err)
+	fatalIfError(err, "Error convertRadar wunderground observations for WRFDA: %w")
+
 }
 
-func getConvertStationsSync(sess webdrops.Session, dt time.Time, done *sync.WaitGroup, errs chan error) {
-	defer done.Done()
+func getConvertStationsSync(sess webdrops.Session, dt time.Time) {
 	err := fetcher.WrfdaSensors(sess, dt, webdrops.ItalyDomain)
 	fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
 
-	if err != nil {
-		errs <- err
-		return
-	}
-
 	convertStations(dt, &err)
-	if err != nil {
-		errs <- err
-		return
-	}
+	convertStations(dt.Add(-3*time.Hour), &err)
+	convertStations(dt.Add(-6*time.Hour), &err)
+	fatalIfError(err, "Error convertStations wunderground observations for WRFDA: %w")
+
 }
 
 func getConvertObs(startDateWRF time.Time, getConvertFn getConvertFnT) {
-	errs := make(chan error)
-
 	var sess webdrops.Session
 	err := sess.Login()
 	fatalIfError(err, "Error during login: %w")
 
-	go func() {
-		allDone := sync.WaitGroup{}
-		allDone.Add(3)
-
-		getConvertFn(sess, startDateWRF, &allDone, errs)
-		//getConvertFn(sess, startDateWRF.Add(-3*time.Hour), &allDone, errs)
-		//getConvertFn(sess, startDateWRF.Add(-6*time.Hour), &allDone, errs)
-		allDone.Wait()
-		close(errs)
-	}()
-
-	err = <-errs
+	getConvertFn(sess, startDateWRF)
 	fatalIfError(err, "cannot convert radar data: %w")
 }
 

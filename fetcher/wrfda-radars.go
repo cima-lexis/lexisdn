@@ -3,7 +3,6 @@ package fetcher
 import (
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"path/filepath"
 	"time"
@@ -36,10 +35,15 @@ func WrfdaRadars(sess webdrops.Session, simulStartDate time.Time) error {
 		sess: sess,
 	}
 
-	fetchDate := func(date time.Time) {
-		fetcher.fetchRadar(date, "CAPPI2", true)
-		fetcher.fetchRadar(date, "CAPPI3", false)
-		fetcher.fetchRadar(date, "CAPPI5", false)
+	fetchDate := func(instant time.Time) {
+		bestInstant /*timeline*/, err := fetcher.sess.RadarTimeline(instant, false)
+		if err != nil {
+			fetcher.sessError = fmt.Errorf("Error downloading radars timeline: %w", err)
+			return
+		}
+		fetcher.fetchRadar(bestInstant, "CAPPI2", true)
+		fetcher.fetchRadar(bestInstant, "CAPPI3", false)
+		fetcher.fetchRadar(bestInstant, "CAPPI5", false)
 
 	}
 
@@ -61,21 +65,8 @@ func (fetcher *wrfdaRadarsSession) fetchRadar(date time.Time, varName string, lo
 		return
 	}
 
-	timeline, err := fetcher.sess.RadarTimeline(date, log)
-	if err != nil {
-		fetcher.sessError = fmt.Errorf("Error downloading radars timeline: %w", err)
-		return
-	}
-
-	minDiffDate := date.Add(time.Hour * 100)
-	for _, instant := range timeline {
-		if math.Abs(instant.Sub(date).Minutes()) < math.Abs(minDiffDate.Sub(date).Minutes()) {
-			minDiffDate = instant
-		}
-	}
-
 	fmt.Fprintf(os.Stderr, "Downloading radars for %s\n", date.Format("02/01/2006 15"))
-	fileContent, err := fetcher.sess.RadarData(minDiffDate, varName)
+	fileContent, err := fetcher.sess.RadarData(date, varName)
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("Error downloading radars: %w", err)
 		return

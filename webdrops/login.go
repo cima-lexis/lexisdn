@@ -16,7 +16,7 @@ import (
 type Session struct {
 	Token        string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    uint64 `json:"refresh_expires_in"`
+	ExpiresIn    uint64 `json:"expires_in"`
 	ClientID     string
 	RefreshedAt  time.Time
 }
@@ -64,9 +64,9 @@ func (sess *Session) Login() error {
 func (sess *Session) refresh() error {
 	secondsPassedFromToken := uint64(math.Floor(time.Now().Sub(sess.RefreshedAt).Seconds()))
 	fmt.Println("passed", secondsPassedFromToken, "of", sess.ExpiresIn)
-	/*if secondsPassedFromToken < sess.ExpiresIn {
+	if secondsPassedFromToken < sess.ExpiresIn/2 {
 		return nil
-	}*/
+	}
 
 	data := url.Values{}
 	data.Set("client_id", config.Config.ClientID)
@@ -99,6 +99,8 @@ func (sess *Session) refresh() error {
 	ret := json.Unmarshal(body, sess)
 	//fmt.Printf("After: \nTk:%s\nRefTk:%s\n", sess.Token, sess.RefreshToken)
 	sess.RefreshedAt = time.Now()
+	sess.ExpiresIn = 30
+
 	return ret
 
 }
