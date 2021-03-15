@@ -11,7 +11,7 @@ import (
 	"github.com/cima-lexis/lexisdn/config"
 	"github.com/cima-lexis/lexisdn/fetcher"
 	"github.com/cima-lexis/lexisdn/webdrops"
-	"github.com/meteocima/dewetra2wrf/trusted"
+	"github.com/meteocima/dewetra2wrf"
 	"github.com/meteocima/radar2wrf/radar"
 )
 
@@ -201,13 +201,14 @@ func convertStations(date time.Time, err *error) {
 	dtS := date.Format("2006010215")
 	fmt.Printf("Converting stations %s\n", dtS)
 
-	*err = trusted.Get(
-		trusted.DewetraFormat,
+	*err = dewetra2wrf.Convert(
+		dewetra2wrf.DewetraFormat,
 		"WRFDA/SENSORS/"+dtS,
-		"WRFDA/ob.ascii."+dtS,
 		"24,64,-19,48",
 		date,
+		"WRFDA/ob.ascii."+dtS,
 	)
+
 }
 
 /*
