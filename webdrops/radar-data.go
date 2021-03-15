@@ -19,7 +19,7 @@ func (sess *Session) RadarData(date time.Time, varName string) ([]byte, error) {
 
 	bodyResp, err := sess.DoGet(url)
 	if err != nil {
-		return nil, fmt.Errorf("Error performing Post: %w", err)
+		return nil, fmt.Errorf("error performing Post: %w", err)
 	}
 
 	return bodyResp, nil

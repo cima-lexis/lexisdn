@@ -27,13 +27,13 @@ func (sess *Session) login() error {
 	}
 	req, err := http.NewRequest("POST", config.Config.AuthURL, strings.NewReader(data.Encode()))
 	if err != nil {
-		return fmt.Errorf("Error creating HTTP request: %w", err)
+		return fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Error submitting HTTP request: %w", err)
+		return fmt.Errorf("error submitting HTTP request: %w", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
@@ -45,7 +45,7 @@ func (sess *Session) login() error {
 	body, err := ioutil.ReadAll(res.Body)
 	//fmt.Println(string(body))
 	if err != nil {
-		return fmt.Errorf("Error downloading HTTP response: %w", err)
+		return fmt.Errorf("error downloading HTTP response: %w", err)
 	}
 	sess.ClientID = config.Config.ClientID
 	err = json.Unmarshal(body, sess)
@@ -90,7 +90,7 @@ func (sess *Session) DoPost(url string, body interface{}) (res []byte, err error
 			return
 		}
 
-		fmt.Fprintf(os.Stderr, "An error occurred while posting to %s:%s\n", url, err.Error())
+		fmt.Fprintf(os.Stderr, "an error occurred while posting to %s:%s\n", url, err.Error())
 		time.Sleep(i * 10 * time.Second)
 
 	}
@@ -102,21 +102,21 @@ func (sess *Session) get(url string) ([]byte, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating HTTP request: %w", err)
+		return nil, fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	req.Header.Add("Authorization", "Bearer "+sess.Token)
 
 	res, err := client.Do(req)
 	if err != nil {
 
-		return nil, fmt.Errorf("Error submitting HTTP request: %w", err)
+		return nil, fmt.Errorf("error submitting HTTP request: %w", err)
 	}
 	if res.StatusCode != http.StatusOK {
 		defer res.Body.Close()
 		//body, _ := ioutil.ReadAll(res.Body)
 		//fmt.Println(string(body))
 
-		return nil, fmt.Errorf("Error submitting request: HTTP status: %s", res.Status)
+		return nil, fmt.Errorf("error submitting request: HTTP status: %s", res.Status)
 	}
 
 	bodybuf := bufio.NewReaderSize(res.Body, 1024*1024)
@@ -124,7 +124,7 @@ func (sess *Session) get(url string) ([]byte, error) {
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(bodybuf)
 	if err != nil {
-		return nil, fmt.Errorf("Error downloading HTTP response: %w", err)
+		return nil, fmt.Errorf("error downloading HTTP response: %w", err)
 	}
 	return body, nil
 }
@@ -132,30 +132,30 @@ func (sess *Session) get(url string) ([]byte, error) {
 func (sess *Session) post(url string, body interface{}) ([]byte, error) {
 	bodyJ, err := json.Marshal(body)
 	if err != nil {
-		return nil, fmt.Errorf("Error converting body to JSON: %w", err)
+		return nil, fmt.Errorf("error converting body to JSON: %w", err)
 	}
 	bodyR := bytes.NewBuffer(bodyJ)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", url, bodyR)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating HTTP request: %w", err)
+		return nil, fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	req.Header.Add("Authorization", "Bearer "+sess.Token)
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Error submitting HTTP request: %w", err)
+		return nil, fmt.Errorf("error submitting HTTP request: %w", err)
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Error submitting request: HTTP status: %s", res.Status)
+		return nil, fmt.Errorf("error submitting request: HTTP status: %s", res.Status)
 	}
 
 	defer res.Body.Close()
 	bodyResp, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Error downloading HTTP response: %w", err)
+		return nil, fmt.Errorf("error downloading HTTP response: %w", err)
 	}
 	return bodyResp, nil
 }

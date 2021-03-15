@@ -23,7 +23,7 @@ func (sess *Session) SensorsMap(class string, from, to time.Time, group SensorGr
 	//fmt.Println(url)
 	bodyResp, err := sess.DoGet(url)
 	if err != nil {
-		return nil, fmt.Errorf("Error performing GET: %w", err)
+		return nil, fmt.Errorf("error performing GET: %w", err)
 
 	}
 

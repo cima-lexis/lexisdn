@@ -22,13 +22,13 @@ func (sess *Session) timelineForVar(date time.Time, cappivar int) ([]string, err
 
 	body, err := sess.DoGet(url)
 	if err != nil {
-		return nil, fmt.Errorf("Error performing get: %w", err)
+		return nil, fmt.Errorf("error performing get: %w", err)
 	}
 
 	var timeline []string
 	err = json.Unmarshal(body, &timeline)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing JSON: %w", err)
+		return nil, fmt.Errorf("error parsing JSON: %w", err)
 	}
 
 	sort.Strings(timeline)
@@ -36,7 +36,7 @@ func (sess *Session) timelineForVar(date time.Time, cappivar int) ([]string, err
 	for i, instant := range timeline {
 		dt, err := time.Parse("200601021504", instant)
 		if err != nil {
-			return nil, fmt.Errorf("Error parsing timeline: %w", err)
+			return nil, fmt.Errorf("error parsing timeline: %w", err)
 		}
 		instants[i] = dt
 	}*/
@@ -51,15 +51,15 @@ func (sess *Session) RadarTimeline(date time.Time, log bool) (time.Time, error) 
 
 	timelines[0], err = sess.timelineForVar(date, 2)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("Error getting timeline: %w", err)
+		return time.Time{}, fmt.Errorf("error getting timeline: %w", err)
 	}
 	timelines[1], err = sess.timelineForVar(date, 3)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("Error getting timeline: %w", err)
+		return time.Time{}, fmt.Errorf("error getting timeline: %w", err)
 	}
 	timelines[2], err = sess.timelineForVar(date, 5)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("Error getting timeline: %w", err)
+		return time.Time{}, fmt.Errorf("error getting timeline: %w", err)
 	}
 
 	commonInstants := intersect(timelines[0], timelines[1])
@@ -69,7 +69,7 @@ func (sess *Session) RadarTimeline(date time.Time, log bool) (time.Time, error) 
 	for _, instantS := range commonInstants {
 		instant, err := time.Parse("200601021504", instantS)
 		if err != nil {
-			return time.Time{}, fmt.Errorf("Error parsing timeline: %w", err)
+			return time.Time{}, fmt.Errorf("error parsing timeline: %w", err)
 		}
 
 		if instant == date {

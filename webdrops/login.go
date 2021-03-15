@@ -34,13 +34,13 @@ func (sess *Session) Login() error {
 	}
 	req, err := http.NewRequest("POST", config.Config.AuthURL, strings.NewReader(data.Encode()))
 	if err != nil {
-		return fmt.Errorf("Error creating HTTP request: %w", err)
+		return fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Error submitting HTTP request: %w", err)
+		return fmt.Errorf("error submitting HTTP request: %w", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
@@ -52,7 +52,7 @@ func (sess *Session) Login() error {
 	body, err := ioutil.ReadAll(res.Body)
 	//fmt.Println(string(body))
 	if err != nil {
-		return fmt.Errorf("Error downloading HTTP response: %w", err)
+		return fmt.Errorf("error downloading HTTP response: %w", err)
 	}
 	sess.ClientID = config.Config.ClientID
 	err = json.Unmarshal(body, sess)
@@ -62,7 +62,7 @@ func (sess *Session) Login() error {
 }
 
 func (sess *Session) refresh() error {
-	secondsPassedFromToken := uint64(math.Floor(time.Now().Sub(sess.RefreshedAt).Seconds()))
+	secondsPassedFromToken := uint64(math.Floor(time.Since(sess.RefreshedAt).Seconds()))
 	fmt.Println("passed", secondsPassedFromToken, "of", sess.ExpiresIn)
 	if secondsPassedFromToken < sess.ExpiresIn/2 {
 		return nil
@@ -76,13 +76,13 @@ func (sess *Session) refresh() error {
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", config.Config.AuthURL, strings.NewReader(data.Encode()))
 	if err != nil {
-		return fmt.Errorf("Error creating HTTP request: %w", err)
+		return fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Error submitting HTTP request: %w", err)
+		return fmt.Errorf("error submitting HTTP request: %w", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
@@ -93,7 +93,7 @@ func (sess *Session) refresh() error {
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return fmt.Errorf("Error downloading HTTP response: %w", err)
+		return fmt.Errorf("error downloading HTTP response: %w", err)
 	}
 	//fmt.Printf("Before: \nTk:%s\nRefTk:%s\n", sess.Token, sess.RefreshToken)
 	ret := json.Unmarshal(body, sess)

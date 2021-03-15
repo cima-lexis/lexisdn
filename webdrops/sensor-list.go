@@ -16,7 +16,7 @@ func (sess *Session) IdFromSensorsList(sensorList []byte, filter Domain) ([]stri
 	}{}
 	err := json.Unmarshal(sensorList, &sensors)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing JSON: %w", err)
+		return nil, fmt.Errorf("error parsing JSON: %w", err)
 	}
 
 	result := []string{}
@@ -30,7 +30,9 @@ func (sess *Session) IdFromSensorsList(sensorList []byte, filter Domain) ([]stri
 
 		result = append(result, sensor.ID)
 	}
-
+	if len(result) > 100 {
+		result = result[:100]
+	}
 	return result, nil
 }
 

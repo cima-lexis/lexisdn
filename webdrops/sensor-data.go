@@ -25,7 +25,7 @@ func (sess *Session) SensorsData(class string, ids []string, from, to time.Time,
 
 	bodyResp, err := sess.DoPost(url, body)
 	if err != nil {
-		return nil, fmt.Errorf("Error performing Post: %w", err)
+		return nil, fmt.Errorf("error performing Post: %w", err)
 	}
 
 	return bodyResp, nil
