@@ -63,7 +63,7 @@ func (sess *Session) get(url string) ([]byte, error) {
 		return nil, fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	req.Header.Add("Authorization", "Bearer "+sess.Token)
-	//req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Accept-Encoding", "gzip, deflate")
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -77,13 +77,13 @@ func (sess *Session) get(url string) ([]byte, error) {
 
 		return nil, fmt.Errorf("error submitting request: HTTP status: %s", res.Status)
 	}
-
-	bodybuf := bufio.NewReaderSize(res.Body, 1024)
+	fmt.Println("Content-Encoding: ", res.Header.Get("Content-Encoding"))
+	bodybuf := bufio.NewReaderSize(res.Body, 10*1024)
 
 	defer res.Body.Close()
 
 	respWriter := bytes.NewBuffer([]byte{})
-	bodyResp := bufio.NewWriterSize(respWriter, 1024)
+	bodyResp := bufio.NewWriterSize(respWriter, 10*1024)
 	_, err = io.Copy(bodyResp, bodybuf)
 	body := respWriter.Bytes()
 	//body, err := ioutil.ReadAll(bodybuf)
@@ -108,7 +108,7 @@ func (sess *Session) post(url string, body interface{}) ([]byte, error) {
 	}
 	req.Header.Add("Authorization", "Bearer "+sess.Token)
 	req.Header.Add("Content-Type", "application/json")
-	//req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Accept-Encoding", "gzip, deflate")
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -117,12 +117,13 @@ func (sess *Session) post(url string, body interface{}) ([]byte, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error submitting request: HTTP status: %s", res.Status)
 	}
+	fmt.Println("Content-Encoding: ", res.Header.Get("Content-Encoding"))
 
-	bodybuf := bufio.NewReaderSize(res.Body, 1024)
+	bodybuf := bufio.NewReaderSize(res.Body, 10*1024)
 
 	defer res.Body.Close()
 	respWriter := bytes.NewBuffer([]byte{})
-	bodyRespW := bufio.NewWriterSize(respWriter, 1024)
+	bodyRespW := bufio.NewWriterSize(respWriter, 10*1024)
 	_, err = io.Copy(bodyRespW, bodybuf)
 	bodyResp := respWriter.Bytes()
 	//bodyResp, err := ioutil.ReadAll(bodybuf)
