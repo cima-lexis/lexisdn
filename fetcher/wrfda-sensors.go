@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/cima-lexis/lexisdn/webdrops"
@@ -30,11 +31,7 @@ import (
 //
 // Observations are saved, under cwd, on directory WRFDA/SENSORS/<DATE>
 // with name <SENSORCLASS>.json
-func WrfdaSensors(sess webdrops.Session, simulStartDate time.Time, domain webdrops.Domain) error {
-	fetcher := wrfdaSensorsSession{
-		sess:   sess,
-		domain: domain,
-	}
+func WrfdaSensors(simulStartDate time.Time, domain webdrops.Domain) error {
 
 	sensorClasses := []string{
 		"DIREZIONEVENTO",
@@ -45,18 +42,48 @@ func WrfdaSensors(sess webdrops.Session, simulStartDate time.Time, domain webdro
 		"BAROMETRO",
 	}
 
+	allDatesFetched := sync.WaitGroup{}
+	errs := make(chan error, 3)
 	fetchDate := func(date time.Time) {
-		for _, class := range sensorClasses {
-			ids := fetcher.fetchSensorIDs(class, date, domain)
-			fetcher.fetchSensor(class, ids, date, false)
-		}
+		allDatesFetched.Add(1)
+		go func() {
+			defer allDatesFetched.Done()
+			var sess webdrops.Session
+			err := sess.Login()
+			if err != nil {
+				errs <- err
+				return
+			}
+
+			fetcher := wrfdaSensorsSession{
+				sess:   sess,
+				domain: domain,
+			}
+			for _, class := range sensorClasses {
+
+				ids := fetcher.fetchSensorIDs(class, date, domain)
+				fetcher.fetchSensor(class, ids, date, false)
+			}
+			if fetcher.sessError != nil {
+				errs <- fetcher.sessError
+			}
+
+		}()
 	}
 
 	fetchDate(simulStartDate)
 	fetchDate(simulStartDate.Add(-3 * time.Hour))
 	fetchDate(simulStartDate.Add(-6 * time.Hour))
 
-	return fetcher.sessError
+	allDatesFetched.Wait()
+	var err error
+	select {
+	case err = <-errs:
+	default:
+	}
+
+	close(errs)
+	return err
 }
 
 type wrfdaSensorsSession struct {
@@ -73,7 +100,7 @@ func (fetcher *wrfdaSensorsSession) fetchSensorIDs(class string, date time.Time,
 	fmt.Fprintf(os.Stderr, "Downloading sensors registry for %s\n", class)
 	sensorAnag, err := fetcher.sess.SensorsList(class, webdrops.GroupWunderground)
 	if err != nil {
-		fetcher.sessError = fmt.Errorf("Error fetching sensors list: %w", err)
+		fetcher.sessError = fmt.Errorf("error fetching sensors list: %w", err)
 		return nil
 	}
 
@@ -85,20 +112,20 @@ func (fetcher *wrfdaSensorsSession) fetchSensorIDs(class string, date time.Time,
 
 	err = os.MkdirAll(filepath.Dir(jsonFilePath), os.FileMode(0755))
 	if err != nil {
-		fetcher.sessError = fmt.Errorf("Error creating directory `%s`: %w", filepath.Dir(jsonFilePath), err)
+		fetcher.sessError = fmt.Errorf("error creating directory `%s`: %w", filepath.Dir(jsonFilePath), err)
 		return nil
 	}
 
 	fmt.Fprintf(os.Stderr, "Saving observations to %s\n", jsonFilePath)
 	err = ioutil.WriteFile(jsonFilePath, sensorAnag, os.FileMode(0644))
 	if err != nil {
-		fetcher.sessError = fmt.Errorf("Error saving sensors data to `%s`: %w", jsonFilePath, err)
+		fetcher.sessError = fmt.Errorf("error saving sensors data to `%s`: %w", jsonFilePath, err)
 	}
 
 	ids, err := fetcher.sess.IdFromSensorsList(sensorAnag, domain)
 	fmt.Fprintf(os.Stderr, "Found %d sensors\n", len(ids))
 	if err != nil {
-		fetcher.sessError = fmt.Errorf("Error creating directory `%s`: %w", filepath.Dir(jsonFilePath), err)
+		fetcher.sessError = fmt.Errorf("error creating directory `%s`: %w", filepath.Dir(jsonFilePath), err)
 		return nil
 	}
 	return ids
@@ -109,13 +136,13 @@ func (fetcher *wrfdaSensorsSession) fetchSensor(class string, ids []string, date
 		return
 	}
 
-	from := date.Add(-30 * time.Minute)
-	to := date.Add(30 * time.Minute)
+	from := date.Add(-5 * time.Minute)
+	to := date.Add(5 * time.Minute)
 
 	fmt.Fprintf(os.Stderr, "Downloading observations for %s on %s\n", class, date.Format("02/01/2006 15"))
 	observations, err := fetcher.sess.SensorsData(class, ids, from, to, 60, log)
 	if err != nil {
-		fetcher.sessError = fmt.Errorf("Error fetching sensors data: %w", err)
+		fetcher.sessError = fmt.Errorf("error fetching sensors data: %w", err)
 		return
 	}
 
@@ -127,14 +154,14 @@ func (fetcher *wrfdaSensorsSession) fetchSensor(class string, ids []string, date
 
 	err = os.MkdirAll(filepath.Dir(jsonFilePath), os.FileMode(0755))
 	if err != nil {
-		fetcher.sessError = fmt.Errorf("Error creating directory `%s`: %w", filepath.Dir(jsonFilePath), err)
+		fetcher.sessError = fmt.Errorf("error creating directory `%s`: %w", filepath.Dir(jsonFilePath), err)
 		return
 	}
 
 	fmt.Fprintf(os.Stderr, "Saving observations to %s\n", jsonFilePath)
 	err = ioutil.WriteFile(jsonFilePath, observations, os.FileMode(0644))
 	if err != nil {
-		fetcher.sessError = fmt.Errorf("Error saving sensors data to `%s`: %w", jsonFilePath, err)
+		fetcher.sessError = fmt.Errorf("error saving sensors data to `%s`: %w", jsonFilePath, err)
 	}
 
 }

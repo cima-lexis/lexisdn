@@ -19,6 +19,7 @@ type Session struct {
 	ExpiresIn    uint64 `json:"expires_in"`
 	ClientID     string
 	RefreshedAt  time.Time
+	client       *http.Client
 }
 
 func (sess *Session) Login() error {
@@ -29,8 +30,8 @@ func (sess *Session) Login() error {
 	data.Set("password", config.Config.Password)
 	data.Set("username", config.Config.User)
 
-	client := &http.Client{
-		Timeout: time.Second,
+	sess.client = &http.Client{
+		Timeout: 60 * time.Second,
 	}
 	req, err := http.NewRequest("POST", config.Config.AuthURL, strings.NewReader(data.Encode()))
 	if err != nil {
@@ -38,7 +39,7 @@ func (sess *Session) Login() error {
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	res, err := client.Do(req)
+	res, err := sess.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error submitting HTTP request: %w", err)
 	}
@@ -50,12 +51,14 @@ func (sess *Session) Login() error {
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
-	//fmt.Println(string(body))
 	if err != nil {
 		return fmt.Errorf("error downloading HTTP response: %w", err)
 	}
 	sess.ClientID = config.Config.ClientID
 	err = json.Unmarshal(body, sess)
+	if err != nil {
+		return fmt.Errorf("error parsing HTTP JSON response: %w", err)
+	}
 	sess.RefreshedAt = time.Now()
 	sess.ExpiresIn = 30
 	return err
@@ -73,14 +76,13 @@ func (sess *Session) refresh() error {
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", sess.RefreshToken)
 
-	client := &http.Client{}
 	req, err := http.NewRequest("POST", config.Config.AuthURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	res, err := client.Do(req)
+	res, err := sess.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error submitting HTTP request: %w", err)
 	}

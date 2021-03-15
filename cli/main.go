@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/cima-lexis/lexisdn/config"
@@ -96,37 +97,65 @@ func main() {
 
 }
 
-type getConvertFnT func(sess webdrops.Session, dt time.Time)
+type getConvertFnT func(dt time.Time)
 
 func getConvertRadarSync(sess webdrops.Session, dt time.Time) {
-	err := fetcher.WrfdaRadars(sess, dt)
-	fatalIfError(err, "Error WrfdaRadars wunderground observations for WRFDA: %w")
+	err := fetcher.WrfdaRadars(dt)
+	fatalIfError(err, "Error convertRadar for WRFDA: %w")
+	instants := []time.Time{
+		dt,
+		dt.Add(-3 * time.Hour),
+		dt.Add(-6 * time.Hour),
+	}
+	allDatesConverted := sync.WaitGroup{}
+	for _, dt := range instants {
+		allDatesConverted.Add(1)
+		go func(dt time.Time) {
+			var err error
+			convertRadar(dt, &err)
+			if err != nil {
+				fatalIfError(err, "Error convertRadar for WRFDA: %w")
+			}
+			allDatesConverted.Done()
+		}(dt)
+	}
 
-	convertRadar(dt, &err)
-	convertRadar(dt.Add(-3*time.Hour), &err)
-	convertRadar(dt.Add(-6*time.Hour), &err)
-	fatalIfError(err, "Error convertRadar wunderground observations for WRFDA: %w")
-
+	allDatesConverted.Wait()
 }
 
-func getConvertStationsSync(sess webdrops.Session, dt time.Time) {
-	err := fetcher.WrfdaSensors(sess, dt, webdrops.ItalyDomain)
+func getConvertStationsSync(dt time.Time) {
+	err := fetcher.WrfdaSensors(dt, webdrops.ItalyDomain)
 	fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
+	instants := []time.Time{
+		dt,
+		dt.Add(-3 * time.Hour),
+		dt.Add(-6 * time.Hour),
+	}
 
-	convertStations(dt, &err)
-	convertStations(dt.Add(-3*time.Hour), &err)
-	convertStations(dt.Add(-6*time.Hour), &err)
-	fatalIfError(err, "Error convertStations wunderground observations for WRFDA: %w")
+	allDatesConverted := sync.WaitGroup{}
+	for _, dt := range instants {
+		allDatesConverted.Add(1)
+		go func(dt time.Time) {
+			var err error
+			convertStations(dt, &err)
+			if err != nil {
+				fatalIfError(err, "Error convertStations wunderground observations for WRFDA: %w")
+			}
+			allDatesConverted.Done()
+		}(dt)
+	}
+
+	allDatesConverted.Wait()
 
 }
 
 func getConvertObs(startDateWRF time.Time, getConvertFn getConvertFnT) {
-	var sess webdrops.Session
-	err := sess.Login()
-	fatalIfError(err, "Error during login: %w")
+	//var sess webdrops.Session
+	//err := sess.Login()
+	//fatalIfError(err, "Error during login: %w")
 
-	getConvertFn(sess, startDateWRF)
-	fatalIfError(err, "cannot convert radar data: %w")
+	getConvertFn(startDateWRF)
+	//fatalIfError(err, "cannot convert radar data: %w")
 }
 
 func convertRadar(date time.Time, err *error) {

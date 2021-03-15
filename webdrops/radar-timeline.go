@@ -11,8 +11,8 @@ import (
 )
 
 func (sess *Session) timelineForVar(date time.Time, cappivar int) ([]string, error) {
-	from := date.Add(-30 * time.Minute)
-	to := date.Add(30 * time.Minute)
+	from := date.Add(-5 * time.Minute)
+	to := date.Add(5 * time.Minute)
 
 	fromS := from.Format("200601021504")
 	toS := to.Format("200601021504")

@@ -27,7 +27,7 @@ func (sess *Session) DoGet(url string) (res []byte, err error) {
 			return
 		}
 		fmt.Fprintf(os.Stderr, "An error occurred while getting from %s:%s\n", url, err.Error())
-		time.Sleep(i * 10 * time.Second)
+		time.Sleep(i * 1 * time.Second)
 
 	}
 
@@ -49,7 +49,7 @@ func (sess *Session) DoPost(url string, body interface{}) (res []byte, err error
 		}
 
 		fmt.Fprintf(os.Stderr, "an error occurred while posting to %s:%s\n", url, err.Error())
-		time.Sleep(i * 10 * time.Second)
+		time.Sleep(i * 1 * time.Second)
 
 	}
 
@@ -57,7 +57,6 @@ func (sess *Session) DoPost(url string, body interface{}) (res []byte, err error
 }
 
 func (sess *Session) get(url string) ([]byte, error) {
-	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %w", err)
@@ -65,7 +64,7 @@ func (sess *Session) get(url string) ([]byte, error) {
 	req.Header.Add("Authorization", "Bearer "+sess.Token)
 	req.Header.Set("Accept-Encoding", "gzip, deflate")
 
-	res, err := client.Do(req)
+	res, err := sess.client.Do(req)
 	if err != nil {
 
 		return nil, fmt.Errorf("error submitting HTTP request: %w", err)
@@ -77,7 +76,7 @@ func (sess *Session) get(url string) ([]byte, error) {
 
 		return nil, fmt.Errorf("error submitting request: HTTP status: %s", res.Status)
 	}
-	fmt.Println("Content-Encoding: ", res.Header.Get("Content-Encoding"))
+	//fmt.Println("Content-Encoding: ", res.Header.Get("Content-Encoding"))
 	bodybuf := bufio.NewReaderSize(res.Body, 10*1024)
 
 	defer res.Body.Close()
@@ -101,7 +100,6 @@ func (sess *Session) post(url string, body interface{}) ([]byte, error) {
 	}
 	bodyR := bytes.NewBuffer(bodyJ)
 
-	client := &http.Client{}
 	req, err := http.NewRequest("POST", url, bodyR)
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %w", err)
@@ -110,14 +108,14 @@ func (sess *Session) post(url string, body interface{}) ([]byte, error) {
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Set("Accept-Encoding", "gzip, deflate")
 
-	res, err := client.Do(req)
+	res, err := sess.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error submitting HTTP request: %w", err)
 	}
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error submitting request: HTTP status: %s", res.Status)
 	}
-	fmt.Println("Content-Encoding: ", res.Header.Get("Content-Encoding"))
+	//fmt.Println("Content-Encoding: ", res.Header.Get("Content-Encoding"))
 
 	bodybuf := bufio.NewReaderSize(res.Body, 10*1024)
 
