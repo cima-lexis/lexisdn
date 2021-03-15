@@ -30,8 +30,8 @@ func (sess *Session) IdFromSensorsList(sensorList []byte, filter Domain) ([]stri
 
 		result = append(result, sensor.ID)
 	}
-	if len(result) > 100 {
-		result = result[:100]
+	if len(result) > 1000 {
+		result = result[:1000]
 	}
 	return result, nil
 }

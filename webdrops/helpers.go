@@ -5,55 +5,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"time"
 )
 
 const maxRetry = 5
-
-/*
-func (sess *Session) login() error {
-
-	data := url.Values{}
-	data.Set("client_id", config.Config.ClientID)
-	data.Set("grant_type", "password")
-	data.Set("password", config.Config.Password)
-	data.Set("username", config.Config.User)
-
-	client := &http.Client{
-		Timeout: time.Second,
-	}
-	req, err := http.NewRequest("POST", config.Config.AuthURL, strings.NewReader(data.Encode()))
-	if err != nil {
-		return fmt.Errorf("error creating HTTP request: %w", err)
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	res, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("error submitting HTTP request: %w", err)
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP error: %s", res.Status)
-	}
-
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-	//fmt.Println(string(body))
-	if err != nil {
-		return fmt.Errorf("error downloading HTTP response: %w", err)
-	}
-	sess.ClientID = config.Config.ClientID
-	err = json.Unmarshal(body, sess)
-	sess.RefreshedAt = time.Now()
-	sess.ExpiresIn = 30
-	return err
-}
-*/
 
 // DoGet ...
 func (sess *Session) DoGet(url string) (res []byte, err error) {
@@ -105,6 +63,7 @@ func (sess *Session) get(url string) ([]byte, error) {
 		return nil, fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	req.Header.Add("Authorization", "Bearer "+sess.Token)
+	//req.Header.Set("Accept-Encoding", "gzip")
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -119,10 +78,16 @@ func (sess *Session) get(url string) ([]byte, error) {
 		return nil, fmt.Errorf("error submitting request: HTTP status: %s", res.Status)
 	}
 
-	bodybuf := bufio.NewReaderSize(res.Body, 1024*1024)
+	bodybuf := bufio.NewReaderSize(res.Body, 1024)
 
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(bodybuf)
+
+	respWriter := bytes.NewBuffer([]byte{})
+	bodyResp := bufio.NewWriterSize(respWriter, 1024)
+	_, err = io.Copy(bodyResp, bodybuf)
+	body := respWriter.Bytes()
+	//body, err := ioutil.ReadAll(bodybuf)
+
 	if err != nil {
 		return nil, fmt.Errorf("error downloading HTTP response: %w", err)
 	}
@@ -143,6 +108,7 @@ func (sess *Session) post(url string, body interface{}) ([]byte, error) {
 	}
 	req.Header.Add("Authorization", "Bearer "+sess.Token)
 	req.Header.Add("Content-Type", "application/json")
+	//req.Header.Set("Accept-Encoding", "gzip")
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -152,12 +118,19 @@ func (sess *Session) post(url string, body interface{}) ([]byte, error) {
 		return nil, fmt.Errorf("error submitting request: HTTP status: %s", res.Status)
 	}
 
+	bodybuf := bufio.NewReaderSize(res.Body, 1024)
+
 	defer res.Body.Close()
-	bodyResp, err := ioutil.ReadAll(res.Body)
+	respWriter := bytes.NewBuffer([]byte{})
+	bodyRespW := bufio.NewWriterSize(respWriter, 1024)
+	_, err = io.Copy(bodyRespW, bodybuf)
+	bodyResp := respWriter.Bytes()
+	//bodyResp, err := ioutil.ReadAll(bodybuf)
+
 	if err != nil {
-		return nil, fmt.Errorf("error downloading HTTP response: %w", err)
+		return nil, fmt.Errorf("error downloading: HTTP response: %w", err)
 	}
-	return bodyResp, nil
+	return bodyResp /*.Bytes()*/, nil
 }
 
 // Domain is

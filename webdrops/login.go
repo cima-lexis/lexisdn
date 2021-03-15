@@ -63,7 +63,7 @@ func (sess *Session) Login() error {
 
 func (sess *Session) refresh() error {
 	secondsPassedFromToken := uint64(math.Floor(time.Since(sess.RefreshedAt).Seconds()))
-	fmt.Println("passed", secondsPassedFromToken, "of", sess.ExpiresIn)
+	//fmt.Println("passed", secondsPassedFromToken, "of", sess.ExpiresIn)
 	if secondsPassedFromToken < sess.ExpiresIn/2 {
 		return nil
 	}

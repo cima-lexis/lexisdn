@@ -82,7 +82,7 @@ func main() {
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
 		case "WRFDAIT":
 			getConvertObs(startDateWRF, getConvertStationsSync)
-			getConvertObs(startDateWRF, getConvertRadarSync)
+			//getConvertObs(startDateWRF, getConvertRadarSync)
 
 			os.RemoveAll("WRFDA")
 		case "WRFDAFR":
