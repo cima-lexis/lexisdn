@@ -31,7 +31,7 @@ func (sess *Session) Login() error {
 	data.Set("username", config.Config.User)
 
 	sess.client = &http.Client{
-		Timeout: 60 * time.Second,
+		Timeout: 60 * time.Minute,
 	}
 	req, err := http.NewRequest("POST", config.Config.AuthURL, strings.NewReader(data.Encode()))
 	if err != nil {

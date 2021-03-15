@@ -80,12 +80,12 @@ func (sess *Session) get(url string) ([]byte, error) {
 	bodybuf := bufio.NewReaderSize(res.Body, 10*1024)
 
 	defer res.Body.Close()
-
-	respWriter := bytes.NewBuffer([]byte{})
-	bodyResp := bufio.NewWriterSize(respWriter, 10*1024)
-	_, err = io.Copy(bodyResp, bodybuf)
-	body := respWriter.Bytes()
-	//body, err := ioutil.ReadAll(bodybuf)
+	/*
+		respWriter := bytes.NewBuffer([]byte{})
+		bodyResp := bufio.NewWriterSize(respWriter, 10*1024)
+		_, err = io.Copy(bodyResp, bodybuf)
+		body := respWriter.Bytes()*/
+	body, err := io.ReadAll(bodybuf)
 
 	if err != nil {
 		return nil, fmt.Errorf("error downloading HTTP response: %w", err)
@@ -120,11 +120,11 @@ func (sess *Session) post(url string, body interface{}) ([]byte, error) {
 	bodybuf := bufio.NewReaderSize(res.Body, 10*1024)
 
 	defer res.Body.Close()
-	respWriter := bytes.NewBuffer([]byte{})
+	/*respWriter := bytes.NewBuffer([]byte{})
 	bodyRespW := bufio.NewWriterSize(respWriter, 10*1024)
 	_, err = io.Copy(bodyRespW, bodybuf)
-	bodyResp := respWriter.Bytes()
-	//bodyResp, err := ioutil.ReadAll(bodybuf)
+	bodyResp := respWriter.Bytes()*/
+	bodyResp, err := io.ReadAll(bodybuf)
 
 	if err != nil {
 		return nil, fmt.Errorf("error downloading: HTTP response: %w", err)

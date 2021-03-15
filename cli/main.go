@@ -82,26 +82,28 @@ func main() {
 			err = fetcher.ContinuumSensors(startDateWRF, webdrops.ItalyDomain)
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
 		case "WRFDAIT":
-			getConvertObs(startDateWRF, getConvertStationsSync)
-			//getConvertObs(startDateWRF, getConvertRadarSync)
+			getConvertStationsSync(startDateWRF)
+			getConvertRadarSync(startDateWRF)
 
-			os.RemoveAll("WRFDA")
+			os.RemoveAll("WRFDA/SENSORS")
+			os.RemoveAll("WRFDA/RADARS")
 		case "WRFDAFR":
 			// TODO: use france domain here
-			getConvertObs(startDateWRF, getConvertStationsSync)
+			getConvertStationsSync(startDateWRF)
+			// will be provided via DDI
 			//getRadars(err, sess, startDateWRF)
 
-			os.RemoveAll("WRFDA")
+			os.RemoveAll("WRFDA/SENSORS")
 		}
 	}
 
 }
 
-type getConvertFnT func(dt time.Time)
-
-func getConvertRadarSync(sess webdrops.Session, dt time.Time) {
+func getConvertRadarSync(dt time.Time) {
 	err := fetcher.WrfdaRadars(dt)
 	fatalIfError(err, "Error convertRadar for WRFDA: %w")
+
+	// TODO: move all this stuff to a conversion module
 	instants := []time.Time{
 		dt,
 		dt.Add(-3 * time.Hour),
@@ -125,6 +127,8 @@ func getConvertRadarSync(sess webdrops.Session, dt time.Time) {
 
 func getConvertStationsSync(dt time.Time) {
 	err := fetcher.WrfdaSensors(dt, webdrops.ItalyDomain)
+
+	// TODO: move all this stuff to a conversion module
 	fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
 	instants := []time.Time{
 		dt,
@@ -149,6 +153,7 @@ func getConvertStationsSync(dt time.Time) {
 
 }
 
+/*
 func getConvertObs(startDateWRF time.Time, getConvertFn getConvertFnT) {
 	//var sess webdrops.Session
 	//err := sess.Login()
@@ -157,7 +162,9 @@ func getConvertObs(startDateWRF time.Time, getConvertFn getConvertFnT) {
 	getConvertFn(startDateWRF)
 	//fatalIfError(err, "cannot convert radar data: %w")
 }
+*/
 
+// TODO: move all this stuff to a conversion module
 func convertRadar(date time.Time, err *error) {
 	if *err != nil {
 		return
@@ -172,7 +179,7 @@ func convertRadar(date time.Time, err *error) {
 		*err = e
 		return
 	}
-	outfile, e := os.OpenFile("ob.radar."+dtS, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(0644))
+	outfile, e := os.OpenFile("WRFDA/ob.radar."+dtS, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(0644))
 	if e != nil {
 		*err = e
 		return
@@ -185,6 +192,7 @@ func convertRadar(date time.Time, err *error) {
 
 }
 
+// TODO: move all this stuff to a conversion module
 func convertStations(date time.Time, err *error) {
 	if *err != nil {
 		return
@@ -196,7 +204,7 @@ func convertStations(date time.Time, err *error) {
 	*err = trusted.Get(
 		trusted.DewetraFormat,
 		"WRFDA/SENSORS/"+dtS,
-		"ob.ascii."+dtS,
+		"WRFDA/ob.ascii."+dtS,
 		"24,64,-19,48",
 		date,
 	)
