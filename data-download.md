@@ -214,8 +214,6 @@ The radar timeline contains date/time instants of all radar datasets present. Th
 ]
 ```
 
-
-
 ### Radar data download
 
 You can download data for radars by issuing a GET request (upon [authentication](#WEBDROPS-Authentication )) to following URL:
