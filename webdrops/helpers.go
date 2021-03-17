@@ -107,7 +107,7 @@ func (sess *Session) post(url string, body interface{}) ([]byte, error) {
 	}
 	req.Header.Add("Authorization", "Bearer "+sess.Token)
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Set("Accept-Encoding", "gzip, deflate")
+	//req.Header.Set("Accept-Encoding", "gzip, deflate")
 
 	res, err := sess.client.Do(req)
 	if err != nil {

@@ -60,7 +60,6 @@ func WrfdaSensors(simulStartDate time.Time, domain webdrops.Domain) error {
 				domain: domain,
 			}
 			for _, class := range sensorClasses {
-
 				ids := fetcher.fetchSensorIDs(class, date, domain)
 				fetcher.fetchSensor(class, ids, date, false)
 			}
