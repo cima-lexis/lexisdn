@@ -82,7 +82,7 @@ func main() {
 			err = fetcher.ContinuumSensors(startDateWRF, webdrops.ItalyDomain)
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
 		case "WRFDAIT":
-			//getConvertStationsSync(startDateWRF)
+			getConvertStationsSync(startDateWRF)
 			getConvertRadarSync(startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
@@ -102,6 +102,7 @@ func main() {
 func getConvertRadarSync(dt time.Time) {
 	err := fetcher.WrfdaRadars(dt)
 	fatalIfError(err, "Error convertRadar for WRFDA: %w")
+	//time.Sleep(time.Second)
 
 	// TODO: move all this stuff to a conversion module
 	instants := []time.Time{
@@ -109,20 +110,18 @@ func getConvertRadarSync(dt time.Time) {
 		dt.Add(-3 * time.Hour),
 		dt.Add(-6 * time.Hour),
 	}
-	allDatesConverted := sync.WaitGroup{}
-	for _, dt := range instants {
-		allDatesConverted.Add(1)
-		go func(dt time.Time) {
-			var err error
-			convertRadar(dt, &err)
-			if err != nil {
-				fatalIfError(err, "Error convertRadar for WRFDA: %w")
-			}
-			allDatesConverted.Done()
-		}(dt)
-	}
 
-	allDatesConverted.Wait()
+	//	allDatesConverted := sync.WaitGroup{}
+	for _, dt := range instants {
+		//		allDatesConverted.Add(1)
+		//		go func(dt time.Time) {
+		convertRadar(dt, &err)
+		//			allDatesConverted.Done()
+		//		}(dt)
+	}
+	fatalIfError(err, "Error convertRadar for WRFDA: %w")
+
+	//	allDatesConverted.Wait()
 }
 
 func getConvertStationsSync(dt time.Time) {
@@ -184,11 +183,13 @@ func convertRadar(date time.Time, err *error) {
 		*err = e
 		return
 	}
-
+	defer outfile.Close()
 	outfileBuff := bufio.NewWriter(outfile)
 
-	defer outfile.Close()
 	_, *err = io.Copy(outfileBuff, reader)
+	if *err == nil {
+		outfileBuff.Flush()
+	}
 
 }
 

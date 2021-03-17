@@ -19,7 +19,8 @@ func (sess *Session) DoGet(url string) (res []byte, err error) {
 	for i := time.Duration(0); i < maxRetry; i++ {
 		err = sess.refresh()
 		if err != nil {
-			return nil, err
+			time.Sleep(i * 1 * time.Second)
+			continue
 		}
 
 		res, err = sess.get(url)
@@ -40,7 +41,8 @@ func (sess *Session) DoPost(url string, body interface{}) (res []byte, err error
 	for i := time.Duration(0); i < maxRetry; i++ {
 		err = sess.refresh()
 		if err != nil {
-			return nil, err
+			time.Sleep(i * 1 * time.Second)
+			continue
 		}
 
 		res, err = sess.post(url, body)
@@ -66,7 +68,6 @@ func (sess *Session) get(url string) ([]byte, error) {
 
 	res, err := sess.client.Do(req)
 	if err != nil {
-
 		return nil, fmt.Errorf("error submitting HTTP request: %w", err)
 	}
 	if res.StatusCode != http.StatusOK {
