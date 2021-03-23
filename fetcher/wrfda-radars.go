@@ -91,11 +91,8 @@ func (fetcher *wrfdaRadarsSession) fetchRadar(date time.Time, varName string, lo
 		return
 	}
 
-	radarFilePath := filepath.Join(
-		"WRFDA/RADARS",
-		date.Format("2006010215"),
-		varName+".nc",
-	)
+	dtS := date.Format("2006010215")
+	radarFilePath := fmt.Sprintf("WRFDA/RADARS/%s/%s-%s.nc", dtS, dtS, varName)
 
 	err = os.MkdirAll(filepath.Dir(radarFilePath), os.FileMode(0755))
 	if err != nil {

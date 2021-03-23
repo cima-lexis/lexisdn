@@ -82,11 +82,11 @@ func main() {
 			err = fetcher.ContinuumSensors(startDateWRF, webdrops.ItalyDomain)
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
 		case "WRFDAIT":
-//			getConvertStationsSync(startDateWRF)
+			getConvertStationsSync(startDateWRF)
 			getConvertRadarSync(startDateWRF)
 
-//			os.RemoveAll("WRFDA/SENSORS")
-//			os.RemoveAll("WRFDA/RADARS")
+			os.RemoveAll("WRFDA/SENSORS")
+			os.RemoveAll("WRFDA/RADARS")
 		case "WRFDAFR":
 			// TODO: use france domain here
 			getConvertStationsSync(startDateWRF)
