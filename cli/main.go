@@ -142,7 +142,8 @@ func getConvertStationsSync(dt time.Time) {
 			var err error
 			convertStations(dt, &err)
 			if err != nil {
-				fatalIfError(err, "Error convertStations wunderground observations for WRFDA: %w")
+				msg := fmt.Sprintf("Error converting wunderground observations of date %s: %%w", dt.Format("200601021504"))
+				fatalIfError(err, msg)
 			}
 			allDatesConverted.Done()
 		}(dt)
