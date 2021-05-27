@@ -15,7 +15,7 @@ const maxRetry = 5
 
 // DoGet ...
 func (sess *Session) DoGet(url string) (res []byte, err error) {
-
+	fmt.Println("GET", url)
 	for i := time.Duration(0); i < maxRetry; i++ {
 		err = sess.refresh()
 		if err != nil {
@@ -37,7 +37,7 @@ func (sess *Session) DoGet(url string) (res []byte, err error) {
 
 // DoPost ...
 func (sess *Session) DoPost(url string, body interface{}) (res []byte, err error) {
-
+	fmt.Println("POST", url)
 	for i := time.Duration(0); i < maxRetry; i++ {
 		err = sess.refresh()
 		if err != nil {
@@ -64,7 +64,7 @@ func (sess *Session) get(url string) ([]byte, error) {
 		return nil, fmt.Errorf("error creating HTTP request: %w", err)
 	}
 	req.Header.Add("Authorization", "Bearer "+sess.Token)
-	req.Header.Set("Accept-Encoding", "gzip, deflate")
+	//req.Header.Set("Accept-Encoding", "gzip, deflate")
 
 	res, err := sess.client.Do(req)
 	if err != nil {
