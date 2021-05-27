@@ -15,7 +15,7 @@ const maxRetry = 5
 
 // DoGet ...
 func (sess *Session) DoGet(url string) (res []byte, err error) {
-	fmt.Println("GET", url)
+	//fmt.Println("GET", url)
 	for i := time.Duration(0); i < maxRetry; i++ {
 		err = sess.refresh()
 		if err != nil {
@@ -37,7 +37,7 @@ func (sess *Session) DoGet(url string) (res []byte, err error) {
 
 // DoPost ...
 func (sess *Session) DoPost(url string, body interface{}) (res []byte, err error) {
-	fmt.Println("POST", url)
+	//fmt.Println("POST", url)
 	for i := time.Duration(0); i < maxRetry; i++ {
 		err = sess.refresh()
 		if err != nil {
@@ -138,6 +138,7 @@ type Domain struct {
 	MinLat, MinLon, MaxLat, MaxLon float64
 }
 
+// ItalyDomain ...
 var ItalyDomain = Domain{
 	MaxLat: 66,
 	MinLat: 23,
