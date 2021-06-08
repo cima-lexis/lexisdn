@@ -20,7 +20,7 @@ func usage(errmsg string, args ...interface{}) {
 	fmt.Fprint(os.Stderr, "\n\n")
 	fmt.Fprintln(os.Stderr, `Usage: lexisdn STARTDATE [DOWNLOAD_TYPE ...]
 	STARTDATE - Satrt date/time of the simulation, in format YYYYMMDDHH
-	DOWNLOAD_TYPE - types of data to download. One or more of "RISICO" | "CONTINUUM" | "WRFDAIT" | "WRFDAFR", separated by space
+	DOWNLOAD_TYPE - types of data to download. One of "RISICO" | "CONTINUUM" | "ADMS" | "LIMAGRAIN"
 	`)
 	os.Exit(1)
 }
@@ -31,7 +31,7 @@ func checkArguments() {
 	}
 
 	if len(os.Args) < 3 {
-		usage("At least one DOWNLOAD_TYPE argument required.")
+		usage("DOWNLOAD_TYPE argument required.")
 	}
 
 	_, err := time.Parse("2006010215", os.Args[1])
@@ -45,9 +45,9 @@ func checkArguments() {
 			continue
 		case "CONTINUUM":
 			continue
-		case "WRFDAIT":
+		case "ADMS":
 			continue
-		case "WRFDAFR":
+		case "LIMAGRAIN":
 			continue
 		default:
 			usage("Invalid DOWNLOAD_TYPE argument `%s`.", downloadType)
