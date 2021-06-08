@@ -62,6 +62,11 @@ func fatalIfError(err error, msgerr string) {
 	}
 }
 
+type domainDef struct{ coord string }
+
+var franceDomain = domainDef{"38,55,-10,12"}
+var italyDomain = domainDef{"24,64,-19,48"}
+
 func main() {
 
 	config.Init()
@@ -78,25 +83,36 @@ func main() {
 		case "RISICO":
 			err = fetcher.RisicoSensorsMaps(startDateWRF)
 			fatalIfError(err, "Error fetching wunderground observations maps for RISICO: %w")
+
+			getConvertStationsSync(startDateWRF, italyDomain)
+			getConvertRadarSync(startDateWRF)
+			getConvertStationsSync(startDateWRF.Add(-24*time.Hour), italyDomain)
+			getConvertRadarSync(startDateWRF.Add(-24 * time.Hour))
+			getConvertStationsSync(startDateWRF.Add(-48*time.Hour), italyDomain)
+			getConvertRadarSync(startDateWRF.Add(-48 * time.Hour))
+
+			os.RemoveAll("WRFDA/SENSORS")
+			os.RemoveAll("WRFDA/RADARS")
+
 		case "CONTINUUM":
 			err = fetcher.ContinuumSensors(startDateWRF, webdrops.ItalyDomain)
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
-		case "WRFDAIT":
-			getConvertStationsSync(startDateWRF)
+
+			getConvertStationsSync(startDateWRF, italyDomain)
 			getConvertRadarSync(startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
 			os.RemoveAll("WRFDA/RADARS")
-		case "WRFDAFR":
+
+		case "ADMS", "LIMAGRAIN":
 			// TODO: use france domain here
-			getConvertStationsSync(startDateWRF)
+			getConvertStationsSync(startDateWRF, franceDomain)
 			// will be provided via DDI
 			//getRadars(err, sess, startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
 		}
 	}
-
 }
 
 func getConvertRadarSync(dt time.Time) {
@@ -124,7 +140,7 @@ func getConvertRadarSync(dt time.Time) {
 	//	allDatesConverted.Wait()
 }
 
-func getConvertStationsSync(dt time.Time) {
+func getConvertStationsSync(dt time.Time, domain domainDef) {
 	err := fetcher.WrfdaSensors(dt, webdrops.ItalyDomain)
 
 	// TODO: move all this stuff to a conversion module
@@ -140,7 +156,7 @@ func getConvertStationsSync(dt time.Time) {
 		allDatesConverted.Add(1)
 		go func(dt time.Time) {
 			var err error
-			convertStations(dt, &err)
+			convertStations(dt, domain, &err)
 			if err != nil {
 				msg := fmt.Sprintf("Error converting wunderground observations of date %s: %%w", dt.Format("200601021504"))
 				fatalIfError(err, msg)
@@ -195,7 +211,7 @@ func convertRadar(date time.Time, err *error) {
 }
 
 // TODO: move all this stuff to a conversion module
-func convertStations(date time.Time, err *error) {
+func convertStations(date time.Time, domain domainDef, err *error) {
 	if *err != nil {
 		return
 	}
@@ -206,16 +222,9 @@ func convertStations(date time.Time, err *error) {
 	*err = dewetra2wrf.Convert(
 		dewetra2wrf.DewetraFormat,
 		"WRFDA/SENSORS/"+dtS,
-		"24,64,-19,48",
+		domain.coord,
 		date,
 		"WRFDA/ob.ascii."+dtS,
 	)
 
 }
-
-/*
-leftlon = -19.0
-rightlon = 48.0
-toplat = 64.0
-bottomlat = 24.0
-*/
