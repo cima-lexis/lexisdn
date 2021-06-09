@@ -34,12 +34,12 @@ import (
 func WrfdaSensors(simulStartDate time.Time, domain webdrops.Domain) error {
 
 	sensorClasses := []string{
-		"DIREZIONEVENTO",
-		"IGROMETRO",
+		//"DIREZIONEVENTO",
+		//"IGROMETRO",
 		"TERMOMETRO",
-		"ANEMOMETRO",
-		"PLUVIOMETRO",
-		"BAROMETRO",
+		//"ANEMOMETRO",
+		//"PLUVIOMETRO",
+		//"BAROMETRO",
 	}
 
 	allDatesFetched := sync.WaitGroup{}

@@ -11,26 +11,7 @@ import (
 	"github.com/cima-lexis/lexisdn/webdrops"
 )
 
-// WrfdaSensors retrieves a set of sensors datasets and save them to files.
-// Datasets downloaded are all wunderground sensors data to assimilate in a
-// WRFDA simulation.
-//
-// Needed dewetra sensor classes are:
-//  * IGROMETRO
-//  * TERMOMETRO
-//  * DIREZIONEVENTO
-//  * ANEMOMETRO
-//  * PLUVIOMETRO
-//  * BAROMETRO
-//
-// Being D the start date and time of WRF simulation, needed dates
-// of observations are at time D-6H, D-3H and D. For each hour this function downloads
-// all observations from 30 minutes before to 30 minutes after. The
-// observation that will be assimilated for each sensors is the one
-// near the exact hour.
-//
-// Observations are saved, under cwd, on directory WRFDA/SENSORS/<DATE>
-// with name <SENSORCLASS>.json
+// WrfdaRadars retrieves
 func WrfdaRadars(simulStartDate time.Time) error {
 
 	allDatesFetched := sync.WaitGroup{}
