@@ -8,8 +8,8 @@ github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORN
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
-github.com/meteocima/dewetra2wrf v1.0.1 h1:CXj1hg8Qrqc7n87tLBrNqyvPgynvtowOXpWSUatxlvw=
-github.com/meteocima/dewetra2wrf v1.0.1/go.mod h1:nJqswaKllXFXskOyehHKDIozcG8Gk7bnoGGOKhzhd8k=
+github.com/meteocima/dewetra2wrf v1.2.0 h1:1xuUrE4yJzZtZzZ1apxt1f3MKAhGpu+rY7VOVMeymBE=
+github.com/meteocima/dewetra2wrf v1.2.0/go.mod h1:nJqswaKllXFXskOyehHKDIozcG8Gk7bnoGGOKhzhd8k=
 github.com/meteocima/radar2wrf v1.7.0 h1:Pd2U9CdjnWo896vvLv1HZ9PFDMYMnYIr6MK2uAdLqpU=
 github.com/meteocima/radar2wrf v1.7.0/go.mod h1:k7NkkiglMHxd2O/YhJj7N8/mlipi3gWKwLXr4o2JcFA=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
