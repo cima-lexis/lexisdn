@@ -10,7 +10,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "/mnt/repos/cima/lexisdn/cli/main.go",
+      "program": "/rhomes/andrea.parodi/repos/lexisdn/cli/main.go",
       "env": {
         "WEBDROPS_AUTH_URL": "https://testauth.cimafoundation.org/auth/realms/webdrops/protocol/openid-connect/token",
         "WEBDROPS_URL": "http://webdrops.cimafoundation.org/app/",
