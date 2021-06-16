@@ -130,7 +130,7 @@ func (fetcher *wrfdaSensorsSession) fetchSensorIDs(class string, date time.Time,
 	return ids
 }
 
-func (fetcher *wrfdaSensorsSession) fetchSensor(class string, ids []string, date time.Time, log bool) {
+func (fetcher *wrfdaSensorsSession) fetchSensor(class string/*, ids []string*/, date time.Time, log bool) {
 	if fetcher.sessError != nil {
 		return
 	}

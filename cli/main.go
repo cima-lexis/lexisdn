@@ -141,7 +141,7 @@ func getConvertRadarSync(dt time.Time) {
 }
 
 func getConvertStationsSync(dt time.Time, domain domainDef) {
-	err := fetcher.WrfdaSensors(dt, webdrops.ItalyDomain)
+	err := fetcher.WrfdaSensors(dt, domain)
 
 	// TODO: move all this stuff to a conversion module
 	fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
