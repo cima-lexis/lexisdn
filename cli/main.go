@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -190,6 +191,26 @@ func getConvertRadarSync(dt time.Time) {
 	//	allDatesConverted.Wait()
 }
 
+func copyFile(src, target string) error {
+	r, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	w, err := os.OpenFile(target, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0644))
+	if err != nil {
+		return err
+	}
+	defer w.Close()
+
+	bufSrc := bufio.NewReader(r)
+	bufTarget := bufio.NewWriter(w)
+
+	_, err = io.Copy(bufTarget, bufSrc)
+	return err
+}
+
 func getConvertStationsSync(dt time.Time, domain domainDef) {
 	d, err := domain.ToStruct()
 	fatalIfError(err, "Error parsing domain: %w")
@@ -212,7 +233,36 @@ func getConvertStationsSync(dt time.Time, domain domainDef) {
 	err = fetcher.WrfdaSensors(dt, d)
 	fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
 
-	// TODO: move all this stuff to a conversion module
+	// qui, ricopiare il file del registry su tutte le altre date
+	// scaricate
+
+	registrySrc := "WRFDA/SENSORS/TERMOMETRO-registry.json"
+
+	dtCycle3 := dt
+	dtCycle2 := dt.Add(-3 * time.Hour)
+	dtCycle1 := dt.Add(-6 * time.Hour)
+
+	registry1 := filepath.Join(
+		"WRFDA/SENSORS",
+		dtCycle1.Format("2006010215"),
+		fmt.Sprintf("%s-registry.json", "TERMOMETRO"),
+	)
+
+	registry2 := filepath.Join(
+		"WRFDA/SENSORS",
+		dtCycle2.Format("2006010215"),
+		fmt.Sprintf("%s-registry.json", "TERMOMETRO"),
+	)
+
+	registry3 := filepath.Join(
+		"WRFDA/SENSORS",
+		dtCycle3.Format("2006010215"),
+		fmt.Sprintf("%s-registry.json", "TERMOMETRO"),
+	)
+
+	fatalIfError(copyFile(registrySrc, registry1), "unable to copy registry for cycle 1: %w")
+	fatalIfError(copyFile(registrySrc, registry2), "unable to copy registry for cycle 2: %w")
+	fatalIfError(copyFile(registrySrc, registry3), "unable to copy registry for cycle 3: %w")
 
 	instants := []time.Time{
 		dt,
