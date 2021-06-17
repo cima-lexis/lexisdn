@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -72,8 +73,8 @@ func (sess *Session) get(url string) ([]byte, error) {
 	}
 	if res.StatusCode != http.StatusOK {
 		defer res.Body.Close()
-		//body, _ := ioutil.ReadAll(res.Body)
-		//fmt.Println(string(body))
+		body, _ := ioutil.ReadAll(res.Body)
+		fmt.Println(string(body))
 
 		return nil, fmt.Errorf("error submitting request: HTTP status: %s", res.Status)
 	}
@@ -138,10 +139,11 @@ type Domain struct {
 	MinLat, MinLon, MaxLat, MaxLon float64
 }
 
-// ItalyDomain ...
+/*// ItalyDomain ...
 var ItalyDomain = Domain{
 	MaxLat: 66,
 	MinLat: 23,
 	MinLon: -18,
 	MaxLon: 48,
 }
+*/

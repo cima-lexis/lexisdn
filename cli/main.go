@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -66,6 +68,51 @@ type domainDef struct{ coord string }
 
 var franceDomain = domainDef{"38,55,-10,12"}
 var italyDomain = domainDef{"24,64,-19,48"}
+var emptyDomain webdrops.Domain
+
+// ToStruct returns a new Domain pointer
+// accordingly to the given string, that must
+// contains  MinLat,MaxLat,MinLon,MaxLon values,
+// in that sequence, separated by commas and
+// represented as floats.
+func (d domainDef) ToStruct() (webdrops.Domain, error) {
+	if d.coord == "" {
+		return webdrops.Domain{
+			MinLat: -180,
+			MinLon: -90,
+			MaxLat: 90,
+			MaxLon: 180,
+		}, nil
+	}
+	coords := strings.Split(d.coord, ",")
+
+	MinLat, err := strconv.ParseFloat(coords[0], 64)
+	if err != nil {
+		return emptyDomain, err
+	}
+
+	MaxLat, err := strconv.ParseFloat(coords[1], 64)
+	if err != nil {
+		return emptyDomain, err
+	}
+
+	MinLon, err := strconv.ParseFloat(coords[2], 64)
+	if err != nil {
+		return emptyDomain, err
+	}
+
+	MaxLon, err := strconv.ParseFloat(coords[3], 64)
+	if err != nil {
+		return emptyDomain, err
+	}
+
+	return webdrops.Domain{
+		MinLat: MinLat,
+		MinLon: MinLon,
+		MaxLat: MaxLat,
+		MaxLon: MaxLon,
+	}, nil
+}
 
 func main() {
 
@@ -95,7 +142,10 @@ func main() {
 			os.RemoveAll("WRFDA/RADARS")
 
 		case "CONTINUUM":
-			err = fetcher.ContinuumSensors(startDateWRF, webdrops.ItalyDomain)
+			d, err := italyDomain.ToStruct()
+			fatalIfError(err, "Error parsing domain: %w")
+
+			err = fetcher.ContinuumSensors(startDateWRF, d)
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
 
 			getConvertStationsSync(startDateWRF, italyDomain)
@@ -141,10 +191,29 @@ func getConvertRadarSync(dt time.Time) {
 }
 
 func getConvertStationsSync(dt time.Time, domain domainDef) {
-	err := fetcher.WrfdaSensors(dt, domain)
+	d, err := domain.ToStruct()
+	fatalIfError(err, "Error parsing domain: %w")
+
+	var sess webdrops.Session
+	err = sess.Login()
+	if err != nil {
+		return
+	}
+
+	d, err = domain.ToStruct()
+	fatalIfError(err, "Error parsing domain")
+
+	f := fetcher.WrfdaSensorsSession{
+		Sess:   sess,
+		Domain: d,
+	}
+	f.FetchSensorIDs("TERMOMETRO", dt, d)
+
+	err = fetcher.WrfdaSensors(dt, d)
+	fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
 
 	// TODO: move all this stuff to a conversion module
-	fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
+
 	instants := []time.Time{
 		dt,
 		dt.Add(-3 * time.Hour),

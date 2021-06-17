@@ -75,7 +75,7 @@ func (fetcher *continuumSession) fetchSensor(class string, from, to time.Time, l
 
 	if len(ids) > 0 {
 		fmt.Fprintf(os.Stderr, "Downloading observations for %s from %s to %s\n", class, from.Format("02/01/2006 15"), to.Format("02/01/2006 15"))
-		observations, err := fetcher.sess.SensorsData(class, ids, from, to, 3600, false)
+		observations, err := fetcher.sess.SensorsData(class, from, to, 3600, webdrops.GroupDPC)
 		if err != nil {
 			fetcher.sessError = fmt.Errorf("error fetching sensors data: %w", err)
 			return
