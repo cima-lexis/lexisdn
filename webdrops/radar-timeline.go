@@ -65,6 +65,10 @@ func (sess *Session) RadarTimeline(date time.Time, log bool) (time.Time, error) 
 	commonInstants := intersect(timelines[0], timelines[1])
 	commonInstants = intersect(timelines[2], commonInstants)
 
+	if len(commonInstants) == 0 {
+		return time.Time{}, fmt.Errorf("no radar found for %s", date.Format("200601021504"))
+	}
+
 	bestFound := time.Time{}
 	for _, instantS := range commonInstants {
 		instant, err := time.Parse("200601021504", instantS)

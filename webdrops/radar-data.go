@@ -17,7 +17,7 @@ func (sess *Session) RadarData(date time.Time, varName string) ([]byte, error) {
 		varName,
 	)
 
-	bodyResp, err := sess.DoGet(url, "")
+	bodyResp, err := sess.DoGet(url, "application/octet-stream")
 	if err != nil {
 		return nil, fmt.Errorf("error performing Post: %w", err)
 	}

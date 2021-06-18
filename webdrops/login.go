@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,9 +31,19 @@ func (sess *Session) Login() error {
 	data.Set("password", config.Config.Password)
 	data.Set("username", config.Config.User)
 
-	sess.client = &http.Client{
-		Timeout: 60 * time.Minute,
+	t := &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout:   6 * time.Minute,
+			KeepAlive: 3 * time.Minute,
+		}).Dial,
+		// We use ABSURDLY large keys, and should probably not.
+		TLSHandshakeTimeout: 6 * time.Minute,
 	}
+	c := &http.Client{
+		Transport: t,
+	}
+
+	sess.client = c
 	req, err := http.NewRequest("POST", config.Config.AuthURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("error creating HTTP request: %w", err)

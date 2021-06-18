@@ -70,7 +70,9 @@ func (sess *Session) get(url string, expectedContentType string) ([]byte, error)
 
 	res, err := sess.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error submitting HTTP request: %w", err)
+		defer res.Body.Close()
+		body, _ := ioutil.ReadAll(res.Body)
+		return nil, fmt.Errorf("error submitting HTTP request: %w\nResponse Body:\n%s", err, string(body))
 	}
 	if res.StatusCode != http.StatusOK {
 		defer res.Body.Close()
@@ -81,7 +83,13 @@ func (sess *Session) get(url string, expectedContentType string) ([]byte, error)
 	}
 	encoding := res.Header.Get("Content-Type")
 	if encoding != expectedContentType {
-		return nil, fmt.Errorf("Response with status 200, but content type different than expected.\n expecting `%s`, got `%s`", expectedContentType, encoding)
+		var body string
+		if encoding == "plain/text" || encoding == "text/html" || encoding == "application/json" {
+			defer res.Body.Close()
+			b, _ := ioutil.ReadAll(res.Body)
+			body = string(b)
+		}
+		return nil, fmt.Errorf("Response with status 200, but content type different than expected.\n expecting `%s`, got `%s`\nResponse Body:\n%s", expectedContentType, encoding, body)
 	}
 
 	bodybuf := bufio.NewReaderSize(res.Body, 10*1024)

@@ -10,7 +10,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "/mnt/repos/cima/lexisdn/cli/main.go",
+      "program": "/rhomes/andrea.parodi/repos/lexisdn/cli/main.go",
       "env": {
         "WEBDROPS_AUTH_URL": "https://testauth.cimafoundation.org/auth/realms/webdrops/protocol/openid-connect/token",
         "WEBDROPS_URL": "http://webdrops.cimafoundation.org/app/",
@@ -18,7 +18,7 @@
         "WEBDROPS_PWD": "^8J*ITws38Cd4b5Cg*g%iSni!KqMPH",
         "WEBDROPS_CLIENT_ID": "webdrops"
       },
-      "args": ["2021060600", "ADMS"]
+      "args": ["2018071800", "CONTINUUM"]
     }
   ]
 }

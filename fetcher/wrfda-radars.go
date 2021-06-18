@@ -19,6 +19,7 @@ func WrfdaRadars(simulStartDate time.Time) error {
 	fetchDate := func(date time.Time) {
 		allDatesFetched.Add(1)
 		go func() {
+			defer allDatesFetched.Done()
 			var sess webdrops.Session
 			err := sess.Login()
 			if err != nil {
@@ -30,13 +31,12 @@ func WrfdaRadars(simulStartDate time.Time) error {
 			}
 			bestInstant /*timeline*/, err := fetcher.sess.RadarTimeline(date, false)
 			if err != nil {
-				fetcher.sessError = fmt.Errorf("error downloading radars timeline: %w", err)
+				errs <- fmt.Errorf("error downloading radars timeline: %w", err)
 				return
 			}
 			fetcher.fetchRadar(bestInstant, "CAPPI2", true)
 			fetcher.fetchRadar(bestInstant, "CAPPI3", false)
 			fetcher.fetchRadar(bestInstant, "CAPPI5", false)
-			allDatesFetched.Done()
 		}()
 	}
 	fetchDate(simulStartDate)
