@@ -2,8 +2,6 @@ package webdrops
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,7 +13,7 @@ import (
 const maxRetry = 5
 
 // DoGet ...
-func (sess *Session) DoGet(url string) (res []byte, err error) {
+func (sess *Session) DoGet(url string, expectedContentType string) (res []byte, err error) {
 	//fmt.Println("GET", url)
 	for i := time.Duration(0); i < maxRetry; i++ {
 		err = sess.refresh()
@@ -24,7 +22,7 @@ func (sess *Session) DoGet(url string) (res []byte, err error) {
 			continue
 		}
 
-		res, err = sess.get(url)
+		res, err = sess.get(url, expectedContentType)
 		if err == nil {
 			return
 		}
@@ -36,6 +34,7 @@ func (sess *Session) DoGet(url string) (res []byte, err error) {
 	return
 }
 
+/*
 // DoPost ...
 func (sess *Session) DoPost(url string, body interface{}) (res []byte, err error) {
 	//fmt.Println("POST", url)
@@ -58,8 +57,10 @@ func (sess *Session) DoPost(url string, body interface{}) (res []byte, err error
 
 	return
 }
+*/
+//"application/json"
 
-func (sess *Session) get(url string) ([]byte, error) {
+func (sess *Session) get(url string, expectedContentType string) ([]byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating HTTP request: %w", err)
@@ -74,11 +75,15 @@ func (sess *Session) get(url string) ([]byte, error) {
 	if res.StatusCode != http.StatusOK {
 		defer res.Body.Close()
 		body, _ := ioutil.ReadAll(res.Body)
-		fmt.Println(string(body))
+		//fmt.Println(string(body))
 
-		return nil, fmt.Errorf("error submitting request: HTTP status: %s", res.Status)
+		return nil, fmt.Errorf("error in response: HTTP status: %s\nResponse Body:\n%s", res.Status, string(body))
 	}
-	//fmt.Println("Content-Encoding: ", res.Header.Get("Content-Encoding"))
+	encoding := res.Header.Get("Content-Type")
+	if encoding != expectedContentType {
+		return nil, fmt.Errorf("Response with status 200, but content type different than expected.\n expecting `%s`, got `%s`", expectedContentType, encoding)
+	}
+
 	bodybuf := bufio.NewReaderSize(res.Body, 10*1024)
 
 	defer res.Body.Close()
@@ -86,7 +91,8 @@ func (sess *Session) get(url string) ([]byte, error) {
 		respWriter := bytes.NewBuffer([]byte{})
 		bodyResp := bufio.NewWriterSize(respWriter, 10*1024)
 		_, err = io.Copy(bodyResp, bodybuf)
-		body := respWriter.Bytes()*/
+		body := respWriter.Bytes()
+	*/
 	body, err := io.ReadAll(bodybuf)
 
 	if err != nil {
@@ -95,6 +101,7 @@ func (sess *Session) get(url string) ([]byte, error) {
 	return body, nil
 }
 
+/*
 func (sess *Session) post(url string, body interface{}) ([]byte, error) {
 	bodyJ, err := json.Marshal(body)
 	if err != nil {
@@ -122,17 +129,18 @@ func (sess *Session) post(url string, body interface{}) ([]byte, error) {
 	bodybuf := bufio.NewReaderSize(res.Body, 10*1024)
 
 	defer res.Body.Close()
-	/*respWriter := bytes.NewBuffer([]byte{})
-	bodyRespW := bufio.NewWriterSize(respWriter, 10*1024)
-	_, err = io.Copy(bodyRespW, bodybuf)
-	bodyResp := respWriter.Bytes()*/
+	// respWriter := bytes.NewBuffer([]byte{})
+	// bodyRespW := bufio.NewWriterSize(respWriter, 10*1024)
+	// _, err = io.Copy(bodyRespW, bodybuf)
+	// bodyResp := respWriter.Bytes()
 	bodyResp, err := io.ReadAll(bodybuf)
 
 	if err != nil {
 		return nil, fmt.Errorf("error downloading: HTTP response: %w", err)
 	}
-	return bodyResp /*.Bytes()*/, nil
+	return bodyResp , nil
 }
+*/
 
 // Domain is
 type Domain struct {

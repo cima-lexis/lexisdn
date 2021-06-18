@@ -20,7 +20,7 @@ func (sess *Session) timelineForVar(date time.Time, cappivar int) ([]string, err
 
 	url := fmt.Sprintf(urlFormat, config.Config.URL, cappivar, fromS, toS)
 
-	body, err := sess.DoGet(url)
+	body, err := sess.DoGet(url, "application/json")
 	if err != nil {
 		return nil, fmt.Errorf("error performing get: %w", err)
 	}

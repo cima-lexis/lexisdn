@@ -21,7 +21,7 @@ func (sess *Session) SensorsMap(class string, from, to time.Time, group SensorGr
 		group.String(),
 	)
 	//fmt.Println(url)
-	bodyResp, err := sess.DoGet(url)
+	bodyResp, err := sess.DoGet(url, "application/octet-stream")
 	if err != nil {
 		return nil, fmt.Errorf("error performing GET: %w", err)
 

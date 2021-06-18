@@ -25,7 +25,7 @@ func (sess *Session) SensorsData(class string, from, to time.Time, aggregation i
 		"sensors": ids,
 	}*/
 
-	bodyResp, err := sess.DoGet(url /*, body*/)
+	bodyResp, err := sess.DoGet(url, "application/json" /*, body*/)
 	if err != nil {
 		return nil, fmt.Errorf("error performing Post: %w", err)
 	}
