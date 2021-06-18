@@ -33,10 +33,9 @@ func (sess *Session) Login() error {
 
 	t := &http.Transport{
 		Dial: (&net.Dialer{
-			Timeout:   6 * time.Minute,
-			KeepAlive: 3 * time.Minute,
+			Timeout:   60 * time.Minute,
+			KeepAlive: 30 * time.Minute,
 		}).Dial,
-		// We use ABSURDLY large keys, and should probably not.
 		TLSHandshakeTimeout: 6 * time.Minute,
 	}
 	c := &http.Client{
