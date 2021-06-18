@@ -3,7 +3,7 @@ module github.com/cima-lexis/lexisdn
 go 1.16
 
 require (
-	github.com/meteocima/dewetra2wrf v1.3.0
+	github.com/meteocima/dewetra2wrf v1.3.1
 	github.com/meteocima/radar2wrf v1.7.0
 	github.com/stretchr/testify v1.7.0
 )
