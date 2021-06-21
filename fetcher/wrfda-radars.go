@@ -34,9 +34,9 @@ func WrfdaRadars(simulStartDate time.Time) error {
 				errs <- fmt.Errorf("error downloading radars timeline: %w", err)
 				return
 			}
-			fetcher.fetchRadar(bestInstant, "CAPPI2", true)
-			fetcher.fetchRadar(bestInstant, "CAPPI3", false)
-			fetcher.fetchRadar(bestInstant, "CAPPI5", false)
+			fetcher.fetchRadar(bestInstant, "CAPPI2", date)
+			fetcher.fetchRadar(bestInstant, "CAPPI3", date)
+			fetcher.fetchRadar(bestInstant, "CAPPI5", date)
 		}()
 	}
 	fetchDate(simulStartDate)
@@ -60,7 +60,7 @@ type wrfdaRadarsSession struct {
 	//domain    webdrops.Domain
 }
 
-func (fetcher *wrfdaRadarsSession) fetchRadar(date time.Time, varName string, log bool) {
+func (fetcher *wrfdaRadarsSession) fetchRadar(date time.Time, varName string, dateRequested time.Time) {
 	if fetcher.sessError != nil {
 		return
 	}
@@ -72,8 +72,8 @@ func (fetcher *wrfdaRadarsSession) fetchRadar(date time.Time, varName string, lo
 		return
 	}
 
-	dtS := date.Format("2006010215")
-	radarFilePath := fmt.Sprintf("WRFDA/RADARS/%s/%s-%s.nc", dtS, dtS, varName)
+	dtReq := dateRequested.Format("2006010215")
+	radarFilePath := fmt.Sprintf("WRFDA/RADARS/%s/%s-%s.nc", dtReq, dtReq, varName)
 
 	err = os.MkdirAll(filepath.Dir(radarFilePath), os.FileMode(0755))
 	if err != nil {
