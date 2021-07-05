@@ -123,7 +123,7 @@ func (fetcher *WrfdaSensorsSession) FetchSensorIDs(class string, date time.Time,
 		fetcher.sessError = fmt.Errorf("error saving sensors data to `%s`: %w", jsonFilePath, err)
 	}
 
-	ids, err := fetcher.Sess.IdFromSensorsList(sensorAnag, domain)
+	ids, err := fetcher.Sess.IDFromSensorsList(sensorAnag, domain)
 	fmt.Fprintf(os.Stderr, "Found %d sensors\n", len(ids))
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("error creating directory `%s`: %w", filepath.Dir(jsonFilePath), err)

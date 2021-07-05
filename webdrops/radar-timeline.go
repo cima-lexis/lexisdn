@@ -32,18 +32,12 @@ func (sess *Session) timelineForVar(date time.Time, cappivar int) ([]string, err
 	}
 
 	sort.Strings(timeline)
-	/*instants := make([]time.Time, len(timeline))
-	for i, instant := range timeline {
-		dt, err := time.Parse("200601021504", instant)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing timeline: %w", err)
-		}
-		instants[i] = dt
-	}*/
+	fmt.Printf("Radar availability for date %s, variable CAPPI%d: %v\n", date.Format("2006-01-02-15-04"), cappivar, timeline)
 
 	return timeline, nil
 }
 
+// RadarTimeline ...
 func (sess *Session) RadarTimeline(date time.Time, log bool) (time.Time, error) {
 
 	var timelines [3][]string

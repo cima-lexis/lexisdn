@@ -8,7 +8,8 @@ import (
 	"github.com/cima-lexis/lexisdn/config"
 )
 
-func (sess *Session) IdFromSensorsList(sensorList []byte, filter Domain) ([]string, error) {
+// IDFromSensorsList ...
+func (sess *Session) IDFromSensorsList(sensorList []byte, filter Domain) ([]string, error) {
 	var sensors = []struct {
 		ID  string
 		Lng float64
@@ -38,10 +39,13 @@ func (sess *Session) IdFromSensorsList(sensorList []byte, filter Domain) ([]stri
 	return result, nil
 }
 
+// SensorGroup ...
 type SensorGroup int
 
 const (
+	// GroupWunderground ...
 	GroupWunderground SensorGroup = iota
+	// GroupDPC ...
 	GroupDPC
 )
 
@@ -57,6 +61,7 @@ func (g SensorGroup) String() string {
 	panic(fmt.Sprintf("Unknown group %d", g))
 }
 
+// SensorsList ...
 func (sess *Session) SensorsList(class string, group SensorGroup) ([]byte, error) {
 	url := fmt.Sprintf("%ssensors/list/%s?stationgroup=%s", config.Config.URL, class, group.String())
 	return sess.DoGet(url, "application/json")

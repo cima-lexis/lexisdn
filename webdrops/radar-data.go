@@ -7,6 +7,7 @@ import (
 	"github.com/cima-lexis/lexisdn/config"
 )
 
+// RadarData ...
 func (sess *Session) RadarData(date time.Time, varName string) ([]byte, error) {
 
 	url := fmt.Sprintf(

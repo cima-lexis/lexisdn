@@ -66,7 +66,7 @@ func (fetcher *continuumSession) fetchSensor(class string, from, to time.Time, l
 		return
 	}
 
-	ids, err := fetcher.sess.IdFromSensorsList(sensorRegistry, fetcher.domain)
+	ids, err := fetcher.sess.IDFromSensorsList(sensorRegistry, fetcher.domain)
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("error readings ids: %w", err)
 		return

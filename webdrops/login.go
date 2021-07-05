@@ -14,6 +14,7 @@ import (
 	"github.com/cima-lexis/lexisdn/config"
 )
 
+// Session ...
 type Session struct {
 	Token        string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
@@ -23,6 +24,7 @@ type Session struct {
 	client       *http.Client
 }
 
+// Login ...
 func (sess *Session) Login() error {
 
 	data := url.Values{}
