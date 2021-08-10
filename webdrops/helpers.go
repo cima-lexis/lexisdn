@@ -70,9 +70,13 @@ func (sess *Session) get(url string, expectedContentType string) ([]byte, error)
 
 	res, err := sess.client.Do(req)
 	if err != nil {
-		defer res.Body.Close()
-		body, _ := ioutil.ReadAll(res.Body)
-		return nil, fmt.Errorf("error submitting HTTP request: %w\nResponse Body:\n%s", err, string(body))
+		sbody := "<EMPTY>"
+		if res != nil && res.Body != nil {
+			defer res.Body.Close()
+			body, _ := ioutil.ReadAll(res.Body)
+			sbody = string(body)
+		}
+		return nil, fmt.Errorf("error submitting HTTP request: %w\nResponse Body:\n%s", err, sbody)
 	}
 	if res.StatusCode != http.StatusOK {
 		defer res.Body.Close()
