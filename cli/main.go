@@ -23,7 +23,7 @@ func usage(errmsg string, args ...interface{}) {
 	fmt.Fprint(os.Stderr, "\n\n")
 	fmt.Fprintln(os.Stderr, `Usage: lexisdn STARTDATE [DOWNLOAD_TYPE ...]
 	STARTDATE - Satrt date/time of the simulation, in format YYYYMMDDHH
-	DOWNLOAD_TYPE - types of data to download. One of "RISICO" | "CONTINUUM" | "ADMS" | "LIMAGRAIN"
+	DOWNLOAD_TYPE - types of data to download. One of "RISICO" | "CONTINUUM" | "ADMS" | "LIMAGRAIN" | "WRFIT" | "WRFFR"
 	`)
 	os.Exit(1)
 }
@@ -51,6 +51,10 @@ func checkArguments() {
 		case "ADMS":
 			continue
 		case "LIMAGRAIN":
+			continue
+		case "WRFIT":
+			continue
+		case "WRFFR":
 			continue
 		default:
 			usage("Invalid DOWNLOAD_TYPE argument `%s`.", downloadType)
@@ -155,7 +159,13 @@ func main() {
 			os.RemoveAll("WRFDA/SENSORS")
 			os.RemoveAll("WRFDA/RADARS")
 
-		case "ADMS", "LIMAGRAIN":
+		case "WRFIT":
+			getConvertStationsSync(startDateWRF, italyDomain)
+			getConvertRadarSync(startDateWRF)
+
+			os.RemoveAll("WRFDA/SENSORS")
+			os.RemoveAll("WRFDA/RADARS")
+		case "ADMS", "LIMAGRAIN", "WRFFR":
 			// TODO: use france domain here
 			getConvertStationsSync(startDateWRF, franceDomain)
 			// will be provided via DDI
