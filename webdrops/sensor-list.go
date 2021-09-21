@@ -51,7 +51,7 @@ const (
 
 func (g SensorGroup) String() string {
 	if g == GroupDPC {
-		return url.QueryEscape("Dewetra%default")
+		return url.QueryEscape("Dewetra%Default")
 	}
 
 	if g == GroupWunderground {
