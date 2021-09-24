@@ -31,7 +31,7 @@ import (
 //
 // Observations are saved, under cwd, on directory WRFDA/SENSORS/<DATE>
 // with name <SENSORCLASS>.json
-func WrfdaSensors(simulStartDate time.Time, domain webdrops.Domain) error {
+func WrfdaSensors(simulStartDate time.Time, domain webdrops.Domain, group webdrops.SensorGroup) error {
 
 	sensorClasses := []string{
 		//"DIREZIONEVENTO",
@@ -61,7 +61,7 @@ func WrfdaSensors(simulStartDate time.Time, domain webdrops.Domain) error {
 				Domain: domain,
 			}
 			for _, class := range sensorClasses {
-				fetcher.fetchSensor(class /*, ids*/, date, false)
+				fetcher.fetchSensor(class, date, false, group)
 			}
 			if fetcher.sessError != nil {
 				errs <- fetcher.sessError
@@ -93,13 +93,13 @@ type WrfdaSensorsSession struct {
 }
 
 // FetchSensorIDs ...
-func (fetcher *WrfdaSensorsSession) FetchSensorIDs(class string, date time.Time, domain webdrops.Domain) []string {
+func (fetcher *WrfdaSensorsSession) FetchSensorIDs(class string, date time.Time, domain webdrops.Domain, group webdrops.SensorGroup) []string {
 	if fetcher.sessError != nil {
 		return nil
 	}
 
 	fmt.Fprintf(os.Stderr, "Downloading sensors registry for %s\n", class)
-	sensorAnag, err := fetcher.Sess.SensorsList(class, webdrops.GroupWunderground)
+	sensorAnag, err := fetcher.Sess.SensorsList(class, group)
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("error fetching sensors list: %w", err)
 		return nil
@@ -132,7 +132,7 @@ func (fetcher *WrfdaSensorsSession) FetchSensorIDs(class string, date time.Time,
 	return ids
 }
 
-func (fetcher *WrfdaSensorsSession) fetchSensor(class string /*, ids []string*/, date time.Time, log bool) {
+func (fetcher *WrfdaSensorsSession) fetchSensor(class string, date time.Time, log bool, group webdrops.SensorGroup) {
 	if fetcher.sessError != nil {
 		return
 	}
@@ -141,7 +141,7 @@ func (fetcher *WrfdaSensorsSession) fetchSensor(class string /*, ids []string*/,
 	to := date.Add(5 * time.Minute)
 
 	fmt.Fprintf(os.Stderr, "Downloading observations for %s on %s\n", class, date.Format("02/01/2006 15"))
-	observations, err := fetcher.Sess.SensorsData(class /*, ids*/, from, to, 60, webdrops.GroupWunderground)
+	observations, err := fetcher.Sess.SensorsData(class /*, ids*/, from, to, 60, group)
 	if err != nil {
 		fetcher.sessError = fmt.Errorf("error fetching sensors data: %w", err)
 		return

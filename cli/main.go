@@ -23,7 +23,7 @@ func usage(errmsg string, args ...interface{}) {
 	fmt.Fprint(os.Stderr, "\n\n")
 	fmt.Fprintln(os.Stderr, `Usage: lexisdn STARTDATE [DOWNLOAD_TYPE ...]
 	STARTDATE - Satrt date/time of the simulation, in format YYYYMMDDHH
-	DOWNLOAD_TYPE - types of data to download. One of "RISICO" | "CONTINUUM" | "ADMS" | "LIMAGRAIN" | "WRFIT" | "WRFFR"
+	DOWNLOAD_TYPE - types of data to download. One of "RISICO" | "CONTINUUM" | "ADMS" | "LIMAGRAIN" | "WRFIT" | "WRFITDPC" | "WRFFR"
 	`)
 	os.Exit(1)
 }
@@ -44,17 +44,7 @@ func checkArguments() {
 
 	for _, downloadType := range os.Args[2:] {
 		switch downloadType {
-		case "RISICO":
-			continue
-		case "CONTINUUM":
-			continue
-		case "ADMS":
-			continue
-		case "LIMAGRAIN":
-			continue
-		case "WRFIT":
-			continue
-		case "WRFFR":
+		case "RISICO", "CONTINUUM", "ADMS", "LIMAGRAIN", "WRFIT", "WRFITDPC", "WRFFR":
 			continue
 		default:
 			usage("Invalid DOWNLOAD_TYPE argument `%s`.", downloadType)
@@ -136,11 +126,11 @@ func main() {
 			err = fetcher.RisicoSensorsMaps(startDateWRF)
 			fatalIfError(err, "Error fetching wunderground observations maps for RISICO: %w")
 
-			getConvertStationsSync(startDateWRF, italyDomain)
+			getConvertStationsSync(startDateWRF, italyDomain, webdrops.GroupWunderground)
 			getConvertRadarSync(startDateWRF)
-			getConvertStationsSync(startDateWRF.Add(-24*time.Hour), italyDomain)
+			getConvertStationsSync(startDateWRF.Add(-24*time.Hour), italyDomain, webdrops.GroupWunderground)
 			getConvertRadarSync(startDateWRF.Add(-24 * time.Hour))
-			getConvertStationsSync(startDateWRF.Add(-48*time.Hour), italyDomain)
+			getConvertStationsSync(startDateWRF.Add(-48*time.Hour), italyDomain, webdrops.GroupWunderground)
 			getConvertRadarSync(startDateWRF.Add(-48 * time.Hour))
 
 			os.RemoveAll("WRFDA/SENSORS")
@@ -153,21 +143,27 @@ func main() {
 			err = fetcher.ContinuumSensors(startDateWRF, d)
 			fatalIfError(err, "Error fetching wunderground observations for CONTINUUM: %w")
 
-			getConvertStationsSync(startDateWRF, italyDomain)
+			getConvertStationsSync(startDateWRF, italyDomain, webdrops.GroupWunderground)
 			getConvertRadarSync(startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
 			os.RemoveAll("WRFDA/RADARS")
 
 		case "WRFIT":
-			getConvertStationsSync(startDateWRF, italyDomain)
+			getConvertStationsSync(startDateWRF, italyDomain, webdrops.GroupWunderground)
+			getConvertRadarSync(startDateWRF)
+
+			os.RemoveAll("WRFDA/SENSORS")
+			os.RemoveAll("WRFDA/RADARS")
+		case "WRFITDPC":
+			getConvertStationsSync(startDateWRF, italyDomain, webdrops.GroupDPC)
 			getConvertRadarSync(startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
 			os.RemoveAll("WRFDA/RADARS")
 		case "ADMS", "LIMAGRAIN", "WRFFR":
 			// TODO: use france domain here
-			getConvertStationsSync(startDateWRF, franceDomain)
+			getConvertStationsSync(startDateWRF, franceDomain, webdrops.GroupWunderground)
 			// will be provided via DDI
 			//getRadars(err, sess, startDateWRF)
 
@@ -221,7 +217,7 @@ func copyFile(src, target string) error {
 	return err
 }
 
-func getConvertStationsSync(dt time.Time, domain domainDef) {
+func getConvertStationsSync(dt time.Time, domain domainDef, group webdrops.SensorGroup) {
 	d, err := domain.ToStruct()
 	fatalIfError(err, "Error parsing domain: %w")
 
@@ -238,9 +234,9 @@ func getConvertStationsSync(dt time.Time, domain domainDef) {
 		Sess:   sess,
 		Domain: d,
 	}
-	f.FetchSensorIDs("TERMOMETRO", dt, d)
+	f.FetchSensorIDs("TERMOMETRO", dt, d, group)
 
-	err = fetcher.WrfdaSensors(dt, d)
+	err = fetcher.WrfdaSensors(dt, d, group)
 	fatalIfError(err, "Error fetching wunderground observations for WRFDA: %w")
 
 	// qui, ricopiare il file del registry su tutte le altre date
