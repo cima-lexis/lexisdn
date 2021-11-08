@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -186,11 +188,10 @@ func getConvertRadarSync(dt time.Time) {
 
 	//	allDatesConverted := sync.WaitGroup{}
 	for _, dt := range instants {
-		//		allDatesConverted.Add(1)
-		//		go func(dt time.Time) {
-		convertRadar(dt, &err)
-		//			allDatesConverted.Done()
-		//		}(dt)
+		convertRadar(dt, 1, &err)
+		convertRadar(dt, 2, &err)
+		convertRadar(dt, 3, &err)
+
 	}
 	fatalIfError(err, "Error convertRadar for WRFDA: %w")
 
@@ -305,8 +306,91 @@ func getConvertObs(startDateWRF time.Time, getConvertFn getConvertFnT) {
 }
 */
 
+func filenameForVar(dirname, varname, dt string) string {
+
+	pt := fmt.Sprintf("%s/%s-%s.nc", dirname, dt, varname)
+	return pt
+}
+
+const regridTmplDir = "~/regrid-tmpl"
+
+func remapBilinear(dir string, radarTime time.Time, varname string, domain int) error {
+	// regrid radar netcdf file
+	sourceFile := filenameForVar(dir, varname, radarTime.Format("2006010215"))
+	targetFile := fmt.Sprintf("%s_dom%02d.remapped", sourceFile, domain)
+	operator := fmt.Sprintf("remapbil,%s/wrfinput_d%02d.template", regridTmplDir, domain)
+
+	cmd := exec.Command("cdo", operator, sourceFile, targetFile)
+
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf(
+			"Cannot apply bilinear remapping for variable %s of radar %s:\n"+
+				"CMD: cdo %s %s %s\n"+
+				"ERR: %w\n",
+			varname, radarTime,
+			operator, sourceFile, targetFile, err,
+		)
+	}
+	return nil
+}
+
+func filterOutLowValues(dir string, radarTime time.Time, varname string, domain int) error {
+	operator := fmt.Sprintf("where(%s < 10) %s=-9999", varname, varname)
+
+	file := filenameForVar(dir, varname, radarTime.Format("2006010215"))
+	sourceFile := fmt.Sprintf("%s_dom%02d.remapped", file, domain)
+	targetFile := fmt.Sprintf("%s_dom%02d.filtered", file, domain)
+
+	cmd := exec.Command("ncap2", "-s", operator, sourceFile, targetFile)
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf(
+			"Cannot filter low values for variable %s of radar %s:\n"+
+				"CMD: ncap2 -s %s %s %s\n"+
+				"ERR: %w\n",
+			varname, radarTime,
+			operator, sourceFile, targetFile, err,
+		)
+	}
+
+	operator = "time=int(time)"
+	sourceFile = fmt.Sprintf("%s_dom%02d.filtered", file, domain)
+	targetFile = fmt.Sprintf("%s_dom%02d.timefixed", file, domain)
+
+	cmd = exec.Command("ncap2", "-s", operator, sourceFile, targetFile)
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf(
+			"Cannot change type for variable %s of radar %s to `int`:\n"+
+				"CMD: ncap2 -s %s %s %s\n"+
+				"ERR: %w\n",
+			varname, radarTime,
+			operator, sourceFile, targetFile, err,
+		)
+	}
+
+	if err := os.Remove(fmt.Sprintf("%s_dom%02d.remapped", file, domain)); err != nil {
+		return err
+	}
+
+	if err := os.Remove(fmt.Sprintf("%s_dom%02d.filtered", file, domain)); err != nil {
+		return err
+	}
+
+	domainDir := fmt.Sprintf("./dom_%02d", domain)
+	targetFile = path.Join(domainDir, file)
+	if err := os.Rename(fmt.Sprintf("%s_dom%02d.timefixed", file, domain), targetFile); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var varnames = []string{"CAPPI2", "CAPPI3", "CAPPI4", "CAPPI5"}
+
 // TODO: move all this stuff to a conversion module
-func convertRadar(date time.Time, err *error) {
+func convertRadar(date time.Time, domain int, err *error) {
 	if *err != nil {
 		return
 	}
@@ -315,7 +399,18 @@ func convertRadar(date time.Time, err *error) {
 	fmt.Printf("Converting radar %s\n", dtS)
 	dir := "WRFDA/RADARS/" + dtS
 
-	reader, e := radar.Convert(dir, dtS)
+	for _, varname := range varnames {
+		if e := remapBilinear(dir, date, varname, domain); err != nil {
+			*err = e
+			return
+		}
+		if e := filterOutLowValues(dir, date, varname, domain); err != nil {
+			*err = e
+			return
+		}
+	}
+
+	reader, e := radar.Convert(dir, "", dtS)
 	if e != nil {
 		*err = e
 		return
