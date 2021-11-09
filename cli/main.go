@@ -152,11 +152,11 @@ func main() {
 			os.RemoveAll("WRFDA/RADARS")
 
 		case "WRFIT":
-			//getConvertStationsSync(startDateWRF, italyDomain, webdrops.GroupWunderground)
+			getConvertStationsSync(startDateWRF, italyDomain, webdrops.GroupWunderground)
 			getConvertRadarSync(startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
-			//os.RemoveAll("WRFDA/RADARS")
+			os.RemoveAll("WRFDA/RADARS")
 		case "WRFITDPC":
 			getConvertStationsSync(startDateWRF, italyDomain, webdrops.GroupDPC)
 			getConvertRadarSync(startDateWRF)
@@ -176,8 +176,8 @@ func main() {
 
 func getConvertRadarSync(dt time.Time) {
 	var err error
-	//err := fetcher.WrfdaRadars(dt)
-	//fatalIfError(err, "Error convertRadar for WRFDA: %w")
+	err = fetcher.WrfdaRadars(dt)
+	fatalIfError(err, "Error convertRadar for WRFDA: %w")
 
 	// TODO: move all this stuff to a conversion module
 	instants := []time.Time{
