@@ -152,11 +152,11 @@ func main() {
 			os.RemoveAll("WRFDA/RADARS")
 
 		case "WRFIT":
-			getConvertStationsSync(startDateWRF, italyDomain, webdrops.GroupWunderground)
+			//getConvertStationsSync(startDateWRF, italyDomain, webdrops.GroupWunderground)
 			getConvertRadarSync(startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
-			os.RemoveAll("WRFDA/RADARS")
+			//os.RemoveAll("WRFDA/RADARS")
 		case "WRFITDPC":
 			getConvertStationsSync(startDateWRF, italyDomain, webdrops.GroupDPC)
 			getConvertRadarSync(startDateWRF)
@@ -175,9 +175,9 @@ func main() {
 }
 
 func getConvertRadarSync(dt time.Time) {
-	err := fetcher.WrfdaRadars(dt)
-	fatalIfError(err, "Error convertRadar for WRFDA: %w")
-	//time.Sleep(time.Second)
+	var err error
+	//err := fetcher.WrfdaRadars(dt)
+	//fatalIfError(err, "Error convertRadar for WRFDA: %w")
 
 	// TODO: move all this stuff to a conversion module
 	instants := []time.Time{
@@ -193,6 +193,10 @@ func getConvertRadarSync(dt time.Time) {
 		convertRadar(dt, 3, &err)
 
 	}
+	fatalIfError(os.RemoveAll("./dom_01"), "Error removing temp directory for domain 1")
+	fatalIfError(os.RemoveAll("./dom_02"), "Error removing temp directory for domain 2")
+	fatalIfError(os.RemoveAll("./dom_03"), "Error removing temp directory for domain 3")
+
 	fatalIfError(err, "Error convertRadar for WRFDA: %w")
 
 	//	allDatesConverted.Wait()
@@ -379,6 +383,10 @@ func filterOutLowValues(dir string, radarTime time.Time, varname string, domain 
 	}
 
 	domainDir := fmt.Sprintf("./dom_%02d", domain)
+	if err := os.MkdirAll(path.Dir(path.Join(domainDir, file)), 0755); err != nil {
+		return err
+	}
+
 	targetFile = path.Join(domainDir, file)
 	if err := os.Rename(fmt.Sprintf("%s_dom%02d.timefixed", file, domain), targetFile); err != nil {
 		return err
@@ -387,7 +395,7 @@ func filterOutLowValues(dir string, radarTime time.Time, varname string, domain 
 	return nil
 }
 
-var varnames = []string{"CAPPI2", "CAPPI3", "CAPPI4", "CAPPI5"}
+var varnames = []string{"CAPPI2", "CAPPI3" /*, "CAPPI4"*/, "CAPPI5"}
 
 // TODO: move all this stuff to a conversion module
 func convertRadar(date time.Time, domain int, err *error) {
@@ -396,26 +404,27 @@ func convertRadar(date time.Time, domain int, err *error) {
 	}
 
 	dtS := date.Format("2006010215")
-	fmt.Printf("Converting radar %s\n", dtS)
+	fmt.Printf("Converting radar %s domain %d\n", dtS, domain)
 	dir := "WRFDA/RADARS/" + dtS
 
 	for _, varname := range varnames {
-		if e := remapBilinear(dir, date, varname, domain); err != nil {
+		if e := remapBilinear(dir, date, varname, domain); e != nil {
 			*err = e
 			return
 		}
-		if e := filterOutLowValues(dir, date, varname, domain); err != nil {
+		if e := filterOutLowValues(dir, date, varname, domain); e != nil {
 			*err = e
 			return
 		}
 	}
 
-	reader, e := radar.Convert(dir, "", dtS)
+	reader, e := radar.Convert(fmt.Sprintf("./dom_%02d/%s", domain, dir), "", dtS)
 	if e != nil {
 		*err = e
 		return
 	}
-	outfile, e := os.OpenFile("WRFDA/ob.radar."+dtS, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(0644))
+	radarOutFilePath := fmt.Sprintf("WRFDA/ob.radar.%s_dom%02d", dtS, domain)
+	outfile, e := os.OpenFile(radarOutFilePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(0644))
 	if e != nil {
 		*err = e
 		return
