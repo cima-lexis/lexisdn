@@ -162,7 +162,7 @@ func main() {
 			getConvertRadarSync(startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
-			os.RemoveAll("WRFDA/RADARS")
+			//os.RemoveAll("WRFDA/RADARS")
 		case "ADMS", "LIMAGRAIN", "WRFFR":
 			// TODO: use france domain here
 			getConvertStationsSync(startDateWRF, franceDomain, webdrops.GroupWunderground)
