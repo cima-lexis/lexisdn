@@ -374,23 +374,23 @@ func filterOutLowValues(dir string, radarTime time.Time, varname string, domain 
 		)
 	}
 
-	if err := os.Remove(fmt.Sprintf("%s_dom%02d.remapped", file, domain)); err != nil {
+	/*if err := os.Remove(fmt.Sprintf("%s_dom%02d.remapped", file, domain)); err != nil {
 		return err
 	}
 
 	if err := os.Remove(fmt.Sprintf("%s_dom%02d.filtered", file, domain)); err != nil {
 		return err
-	}
+	}*/
 
 	domainDir := fmt.Sprintf("./dom_%02d", domain)
 	if err := os.MkdirAll(path.Dir(path.Join(domainDir, file)), 0755); err != nil {
 		return err
 	}
 
-	targetFile = path.Join(domainDir, file)
+	/*targetFile = path.Join(domainDir, file)
 	if err := os.Rename(fmt.Sprintf("%s_dom%02d.timefixed", file, domain), targetFile); err != nil {
 		return err
-	}
+	}*/
 
 	return nil
 }
