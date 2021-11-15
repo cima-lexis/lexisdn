@@ -36,6 +36,7 @@ func WrfdaRadars(simulStartDate time.Time) error {
 			}
 			fetcher.fetchRadar(bestInstant, "CAPPI2", date)
 			fetcher.fetchRadar(bestInstant, "CAPPI3", date)
+			fetcher.fetchRadar(bestInstant, "CAPPI4", date)
 			fetcher.fetchRadar(bestInstant, "CAPPI5", date)
 		}()
 	}

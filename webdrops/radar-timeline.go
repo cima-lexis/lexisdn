@@ -40,7 +40,7 @@ func (sess *Session) timelineForVar(date time.Time, cappivar int) ([]string, err
 // RadarTimeline ...
 func (sess *Session) RadarTimeline(date time.Time, log bool) (time.Time, error) {
 
-	var timelines [3][]string
+	var timelines [4][]string
 	var err error
 
 	timelines[0], err = sess.timelineForVar(date, 2)
@@ -51,13 +51,18 @@ func (sess *Session) RadarTimeline(date time.Time, log bool) (time.Time, error) 
 	if err != nil {
 		return time.Time{}, fmt.Errorf("error getting timeline: %w", err)
 	}
-	timelines[2], err = sess.timelineForVar(date, 5)
+	timelines[2], err = sess.timelineForVar(date, 4)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("error getting timeline: %w", err)
+	}
+	timelines[3], err = sess.timelineForVar(date, 5)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("error getting timeline: %w", err)
 	}
 
 	commonInstants := intersect(timelines[0], timelines[1])
 	commonInstants = intersect(timelines[2], commonInstants)
+	commonInstants = intersect(timelines[3], commonInstants)
 
 	if len(commonInstants) == 0 {
 		return time.Time{}, fmt.Errorf("no radar found for %s", date.Format("200601021504"))
