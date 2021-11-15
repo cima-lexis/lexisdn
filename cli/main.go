@@ -395,7 +395,7 @@ func filterOutLowValues(dir string, radarTime time.Time, varname string, domain 
 	return nil
 }
 
-var varnames = []string{"CAPPI2", "CAPPI3" /*, "CAPPI4"*/, "CAPPI5"}
+var varnames = []string{"CAPPI2", "CAPPI3", "CAPPI4", "CAPPI5"}
 
 // TODO: move all this stuff to a conversion module
 func convertRadar(date time.Time, domain int, err *error) {
