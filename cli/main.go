@@ -162,12 +162,12 @@ func main() {
 			getConvertRadarSync(startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
-			//os.RemoveAll("WRFDA/RADARS")
+			os.RemoveAll("WRFDA/RADARS")
 		case "ADMS", "LIMAGRAIN", "WRFFR":
 			// TODO: use france domain here
 			getConvertStationsSync(startDateWRF, franceDomain, webdrops.GroupWunderground)
 			// will be provided via DDI
-			//getRadars(err, sess, startDateWRF)
+			getRadars(err, sess, startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
 		}
@@ -193,9 +193,9 @@ func getConvertRadarSync(dt time.Time) {
 		convertRadar(dt, 3, &err)
 
 	}
-	//fatalIfError(os.RemoveAll("./dom_01"), "Error removing temp directory for domain 1")
-	//fatalIfError(os.RemoveAll("./dom_02"), "Error removing temp directory for domain 2")
-	//fatalIfError(os.RemoveAll("./dom_03"), "Error removing temp directory for domain 3")
+	fatalIfError(os.RemoveAll("./dom_01"), "Error removing temp directory for domain 1")
+	fatalIfError(os.RemoveAll("./dom_02"), "Error removing temp directory for domain 2")
+	fatalIfError(os.RemoveAll("./dom_03"), "Error removing temp directory for domain 3")
 
 	fatalIfError(err, "Error convertRadar for WRFDA: %w")
 
@@ -374,13 +374,13 @@ func filterOutLowValues(dir string, radarTime time.Time, varname string, domain 
 		)
 	}
 
-	//if err := os.Remove(fmt.Sprintf("%s_dom%02d.remapped", file, domain)); err != nil {
-	//	return err
-	//}
-	//
-	//if err := os.Remove(fmt.Sprintf("%s_dom%02d.filtered", file, domain)); err != nil {
-	//	return err
-	//}
+	if err := os.Remove(fmt.Sprintf("%s_dom%02d.remapped", file, domain)); err != nil {
+		return err
+	}
+
+	if err := os.Remove(fmt.Sprintf("%s_dom%02d.filtered", file, domain)); err != nil {
+		return err
+	}
 
 	domainDir := fmt.Sprintf("./dom_%02d", domain)
 	if err := os.MkdirAll(path.Dir(path.Join(domainDir, file)), 0755); err != nil {
