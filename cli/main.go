@@ -156,7 +156,7 @@ func main() {
 			getConvertRadarSync(startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
-			//os.RemoveAll("WRFDA/RADARS")
+			os.RemoveAll("WRFDA/RADARS")
 		case "WRFITDPC":
 			getConvertStationsSync(startDateWRF, italyDomain, webdrops.GroupDPC)
 			getConvertRadarSync(startDateWRF)
@@ -167,7 +167,7 @@ func main() {
 			// TODO: use france domain here
 			getConvertStationsSync(startDateWRF, franceDomain, webdrops.GroupWunderground)
 			// will be provided via DDI
-			getRadars(err, sess, startDateWRF)
+			//getRadars(err, sess, startDateWRF)
 
 			os.RemoveAll("WRFDA/SENSORS")
 		}
